@@ -186,6 +186,8 @@ void DisplayUpdateHeader(const char* Text);
 
 //void LoadBank(uint8_t BankNumber, BankSettings *bank);
 
+// peters system settings dump
+void Menu_SystemDump(void);
 
 
 #endif /* CALLBACKFUNCTIONS_H_ */

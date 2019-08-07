@@ -87,4 +87,6 @@ extern Menu_Item_t MENU_ITEM_STORAGE noteVelocity;
 extern Menu_Item_t MENU_ITEM_STORAGE bankNumber;
 extern Menu_Item_t MENU_ITEM_STORAGE KeyLoadBank;
 
+// peters adjunctions
+extern Menu_Item_t MENU_ITEM_STORAGE Send_Dump;
 #endif /* MENUITEMS_H_ */
