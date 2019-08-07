@@ -21,6 +21,7 @@
 #include "FirmwareVersion.h"
 #include "PwmControllableFeatures.h"
 #include "Selftest.h"
+#include "dump.h"
 
 #include <string.h>
 #include <avr/io.h>
@@ -102,6 +103,7 @@ int main(void)
 			handleMidiEventAxeFx(inputMessType,midiMessageFromMidi, inputMessLength);
 			handleMidiEventAxeFx3(inputMessType,midiMessageFromMidi, inputMessLength);
 			handleMidiEventKpa(inputMessType, midiMessageFromMidi); 
+			handleMidiSysExSettings( inputMessType, midiMessageFromMidi, inputMessLength, MAX_MIDI_MESSAGE_LENGTH );
 		}
 					
 		lastButtonEvent = getButtonLastEvent();

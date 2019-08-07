@@ -2533,3 +2533,13 @@ void Menu_NavigationProcessButtonEvent(ButtonEvent *ButtonEvent)
 		CurrentFunctionContext.ExecuteFunction();
 	}
 }
+// peters
+#include "dump.h"
+void Menu_SystemDump(void){
+	LCDClear();
+	LCDWriteStringXY(0,0,"DUMPING...");
+	//_delay_ms( 2000 );
+	save_All();
+	Menu_Navigate(MENU_CHILD);
+
+}
