@@ -369,6 +369,21 @@ void presetUpProcess(ButtonEvent* buttonEvent)
 		if(global.useBankSelectMess == USE_BANK_SELECT)//Also need to increment BS message value here
 			cycleIncUcahrVal(&runtimeEnvironment.activeBankNumber_, MAX_BANK_SELECT_MESSAGE_VALUE);
 	}
+	
+	sendPcWithOptionalBs(runtimeEnvironment.activePresetNumber_
+		,runtimeEnvironment.activeBankNumber_
+		,global.midiChanNum
+		,global.bankSelectMessType
+		,global.useBankSelectMess);
+
+	
+	if (runtimeEnvironment.isAxeFxConnected_ == true)//Если акс подключен то отправим запрос на состояние эффектов
+	{
+		requestAxefxInfo(IA_STATE_FUNCTION_ID);
+		runtimeEnvironment.isTimeToShowPresetName_ = 0;//и будем показывать имя банка, пока не придет имя пресета
+	}
+	updateRequests.updateScreenRq_++;
+		
 }
 
 void presetDownProcess(ButtonEvent* buttonEvent)
@@ -381,6 +396,19 @@ void presetDownProcess(ButtonEvent* buttonEvent)
 		if(global.useBankSelectMess == USE_BANK_SELECT)//Also need to increment BS message value here
 			cycleDecUcahrVal(&runtimeEnvironment.activeBankNumber_, MAX_BANK_SELECT_MESSAGE_VALUE);
 	}
+	
+	sendPcWithOptionalBs(runtimeEnvironment.activePresetNumber_
+			,runtimeEnvironment.activeBankNumber_
+			,global.midiChanNum
+			,global.bankSelectMessType
+			,global.useBankSelectMess);
+
+	if (runtimeEnvironment.isAxeFxConnected_ == true)//Если акс подключен то отправим запрос на состояние эффектов
+	{
+		requestAxefxInfo(IA_STATE_FUNCTION_ID);
+		runtimeEnvironment.isTimeToShowPresetName_ = 0;//и будем показывать имя банка, пока не придет имя пресета
+	}
+	updateRequests.updateScreenRq_++;	
 }
 
 void bankChangeProcess(ButtonEvent* buttonEvent, ButtonType buttonType)
