@@ -241,7 +241,7 @@ void save_GS_param( const uint8_t paramID, const GlobalSettings * pGlobals ){
 	midiMsg[offset++] = paramID;
 
 	for( uint16_t i=0; i < inputDataLen; i++ ){
-		uint16_t byte = *(pInputData + i);
+		uint8_t byte = *(pInputData + i);
 		if (false == encodeByte( byte, &midiMsg[offset] )) return;
 		offset+=2;
 	}
