@@ -419,7 +419,7 @@ bool load_BS_param( const uint8_t paramID, uint8_t * pData, uint16_t length, uin
 		DATA
 	} State_t;
 
-	if ( 127 > currentBankNumber ) return(false);
+	if ( 127 < currentBankNumber ) return(false);
 	if ( NULL == pData ) return(false);
 	if ( NULL == pCurrentBank ) return(false);
 	if ( NULL == pGlobals) return(false);
