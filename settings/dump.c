@@ -241,7 +241,7 @@ void save_GS_param( const uint8_t paramID, const GlobalSettings * pGlobals ){
 	midiMsg[offset++] = paramID;
 
 	for( uint16_t i=0; i < inputDataLen; i++ ){
-		uint8_t byte = *(pInputData + i);
+		uint16_t byte = *(pInputData + i);
 		if (false == encodeByte( byte, &midiMsg[offset] )) return;
 		offset+=2;
 	}
@@ -402,7 +402,7 @@ void save_BS_param( const uint8_t paramID,  const uint8_t bankNumber, const Bank
 	midiMsg[offset++] = paramID;
 
 	for( uint16_t i=0; i < inputDataLen; i++ ){
-		uint16_t byte = *(pInputData + i);
+		uint8_t byte = *(pInputData + i);
 		if (false == encodeByte( byte, &midiMsg[offset] )) return;
 		offset+=2;
 	}
@@ -411,7 +411,7 @@ void save_BS_param( const uint8_t paramID,  const uint8_t bankNumber, const Bank
 }
 
 static inline
-bool load_BS_param( const uint8_t paramID, uint8_t * pData, uint16_t length, uint8_t currentBankNumber, BankSettings * pCurrentBank, GlobalSettings * pGlobals  ){
+bool load_BS_param( const uint8_t paramID, uint8_t * pData, uint16_t length, GlobalSettings * pGlobals  ){
 	typedef enum {
 		BANK_SETS = 0,
 		BANK_NUMBER,
@@ -419,18 +419,9 @@ bool load_BS_param( const uint8_t paramID, uint8_t * pData, uint16_t length, uin
 		DATA
 	} State_t;
 
-	if ( 127 < currentBankNumber ) return(false);
 	if ( NULL == pData ) return(false);
-	if ( NULL == pCurrentBank ) return(false);
 	if ( NULL == pGlobals) return(false);
-
 	if (!(2 > length)) return (false);
-
-	// берем адрес данных
-	uint16_t	inputDataLen	= 0;	//input data length in bytes
-	uint8_t *	pInputData		= NULL;	//input data address
-
-	if (false==getDataAndLenghtBS( paramID, &inputDataLen, &pInputData, pCurrentBank )) return(false);
 
 	uint16_t		counter = 0;
 	State_t			state	= BANK_SETS;
@@ -447,7 +438,8 @@ bool load_BS_param( const uint8_t paramID, uint8_t * pData, uint16_t length, uin
 				if ( 0x7F < pData[counter] ) return (false);
 				state = BS_ID;
 				bankNumber = pData[counter];
-				if ( bankNumber != currentBankNumber ) return (false);
+				if ( bankNumber > 127 ) return (false);
+				if ( bankNumber > pGlobals->maxBankNumber ) return (false);
 				break;
 			case BS_ID:
 				if ( paramID != pData[counter] ) return (false);
@@ -463,6 +455,31 @@ bool load_BS_param( const uint8_t paramID, uint8_t * pData, uint16_t length, uin
 		if ( counter >= length ) return (false);
 	}
 
+	if( bankNumber == runtimeEnvironment.activeBankNumber_ ){
+		BankSettings *	pBank		= &bank;
+		uint16_t		_counter	= counter;
+
+		// берем адрес данных
+		uint16_t	inputDataLen	= 0;	//input data length in bytes
+		uint8_t *	pInputData		= NULL;	//input data address
+
+		if (false==getDataAndLenghtBS( paramID, &inputDataLen, &pInputData, pBank )) return(false);
+		// декодирование
+		for ( uint16_t i=0; i<inputDataLen; i++ ){
+			uint8_t byte = 0;
+			if (!decodeByte( &pData[_counter], &byte )) return(false);
+			*(pInputData + i) = byte;
+			_counter+=2;
+		}
+	}
+
+	BankSettings bank;
+	ReadEEPROM((uint8_t*)&bank,		BankSettings_ADDR(bankNumber), sizeof(BankSettings));
+	// берем адрес данных
+	uint16_t	inputDataLen	= 0;	//input data length in bytes
+	uint8_t *	pInputData		= NULL;	//input data address
+
+	if (false==getDataAndLenghtBS( paramID, &inputDataLen, &pInputData, &bank )) return(false);
 	// декодирование
 	for ( uint16_t i=0; i<inputDataLen; i++ ){
 		uint8_t byte = 0;
@@ -470,36 +487,8 @@ bool load_BS_param( const uint8_t paramID, uint8_t * pData, uint16_t length, uin
 		*(pInputData + i) = byte;
 		counter+=2;
 	}
+	WriteEEPROM((uint8_t*)&bank,	BankSettings_ADDR(bankNumber), sizeof(BankSettings));
 
-	// write to eeprom
-	if( bankNumber <= pGlobals->maxBankNumber){
-		//if (checkEepromHeader()) {
-		BankSettings bank;
-		ReadEEPROM((uint8_t*)&bank,		BankSettings_ADDR(bankNumber), sizeof(BankSettings));
-		switch ( paramID ){
-			case BS_ID_tapCC:
-				memcpy( (uint8_t *)&(bank.tapCc), pInputData, inputDataLen );
-				break;
-			case BS_ID_pedalsCC:
-				memcpy( (uint8_t *)&(bank.pedalsCc), pInputData, inputDataLen );
-				break;
-			case BS_ID_tunerCC:
-				memcpy( (uint8_t *)&(bank.tunerCc), pInputData, inputDataLen );
-				break;
-			case BS_ID_buttonType:
-				memcpy( (uint8_t *)&(bank.buttonType), pInputData, inputDataLen );
-				break;
-			case BS_ID_buttonContext:
-				memcpy( (uint8_t *)&(bank.buttonContext), pInputData, inputDataLen );
-				break;
-			case BS_ID_bankName:
-				memcpy( (uint8_t *)&(bank.BankName), pInputData, inputDataLen );
-				break;
-		}
-		WriteEEPROM((uint8_t*)&bank,	BankSettings_ADDR(bankNumber), sizeof(BankSettings));
-		//}
-	}
-	//LOG(SEV_TRACE, "%s bankNumber=%d currentBankNumber=%d tapCc=%d", __FUNCTION__, bankNumber, currentBankNumber, tapCc );
 	return (true);
 }
 
@@ -657,35 +646,37 @@ bool handleMidiSysExSettings( uint8_t midiMsgType, uint8_t * midiMsg, uint16_t m
 	}
 	// decode globals messages
 
-	if (load_GS_param( GS_ID_bnkNum, &midiMsg[startPayloadPos], lengthPayload,  &global )) return (true);
-	if (load_GS_param( GS_ID_midiChanNum, &midiMsg[startPayloadPos], lengthPayload,  &global )) return (true);
-	if (load_GS_param( GS_ID_useBankSelectMess, &midiMsg[startPayloadPos], lengthPayload,  &global )) return (true);
-	if (load_GS_param( GS_ID_bankSelectMessType, &midiMsg[startPayloadPos], lengthPayload,  &global )) return (true);
-	if (load_GS_param( GS_ID_bnkSwOnBoard, &midiMsg[startPayloadPos], lengthPayload,  &global )) return (true);
-	if (load_GS_param( GS_ID_showPresetBank, &midiMsg[startPayloadPos], lengthPayload,  &global )) return (true);
-	if (load_GS_param( GS_ID_targetDevice, &midiMsg[startPayloadPos], lengthPayload,  &global )) return (true);
-	if (load_GS_param( GS_ID_usbBaudrate, &midiMsg[startPayloadPos], lengthPayload,  &global )) return (true);
-	if (load_GS_param( GS_ID_inputThrough, &midiMsg[startPayloadPos], lengthPayload,  &global )) return (true);
-	if (load_GS_param( GS_ID_maxBankNumber, &midiMsg[startPayloadPos], lengthPayload,  &global )) return (true);
-	if (load_GS_param( GS_ID_screenBrightness, &midiMsg[startPayloadPos], lengthPayload,  &global )) return (true);
-	if (load_GS_param( GS_ID_screenContrast, &midiMsg[startPayloadPos], lengthPayload,  &global )) return (true);
-	if (load_GS_param( GS_ID_expPedalType, &midiMsg[startPayloadPos], lengthPayload,  &global )) return (true);
-	if (load_GS_param( GS_ID_buttonHoldTime, &midiMsg[startPayloadPos], lengthPayload,  &global )) return (true);
-	if (load_GS_param( GS_ID_tapDisplayType, &midiMsg[startPayloadPos], lengthPayload,  &global )) return (true);
-	if (load_GS_param( GS_ID_tapType, &midiMsg[startPayloadPos], lengthPayload,  &global )) return (true);
-	if (load_GS_param( GS_ID_pedalLedView, &midiMsg[startPayloadPos], lengthPayload,  &global )) return (true);
-	if (load_GS_param( GS_ID_pedalTunerScheme, &midiMsg[startPayloadPos], lengthPayload,  &global )) return (true);
-	if (load_GS_param( GS_ID_pedalBrightness, &midiMsg[startPayloadPos], lengthPayload,  &global )) return (true);
-	if (load_GS_param( GS_ID_pedalsCalibrationLo, &midiMsg[startPayloadPos], lengthPayload,  &global )) return (true);
-	if (load_GS_param( GS_ID_pedalsCalibrationHi, &midiMsg[startPayloadPos], lengthPayload,  &global )) return (true);
+	if (load_GS_param( GS_ID_bnkNum,				&midiMsg[startPayloadPos], lengthPayload,  &global )) return (true);
+	if (load_GS_param( GS_ID_midiChanNum,			&midiMsg[startPayloadPos], lengthPayload,  &global )) return (true);
+	if (load_GS_param( GS_ID_useBankSelectMess,		&midiMsg[startPayloadPos], lengthPayload,  &global )) return (true);
+	if (load_GS_param( GS_ID_bankSelectMessType,	&midiMsg[startPayloadPos], lengthPayload,  &global )) return (true);
+	if (load_GS_param( GS_ID_bnkSwOnBoard,			&midiMsg[startPayloadPos], lengthPayload,  &global )) return (true);
+	if (load_GS_param( GS_ID_showPresetBank,		&midiMsg[startPayloadPos], lengthPayload,  &global )) return (true);
+	if (load_GS_param( GS_ID_targetDevice,			&midiMsg[startPayloadPos], lengthPayload,  &global )) return (true);
+	if (load_GS_param( GS_ID_usbBaudrate,			&midiMsg[startPayloadPos], lengthPayload,  &global )) return (true);
+	if (load_GS_param( GS_ID_inputThrough,			&midiMsg[startPayloadPos], lengthPayload,  &global )) return (true);
+	if (load_GS_param( GS_ID_maxBankNumber,			&midiMsg[startPayloadPos], lengthPayload,  &global )) return (true);
+	if (load_GS_param( GS_ID_screenBrightness,		&midiMsg[startPayloadPos], lengthPayload,  &global )) return (true);
+	if (load_GS_param( GS_ID_screenContrast,		&midiMsg[startPayloadPos], lengthPayload,  &global )) return (true);
+	if (load_GS_param( GS_ID_expPedalType,			&midiMsg[startPayloadPos], lengthPayload,  &global )) return (true);
+	if (load_GS_param( GS_ID_buttonHoldTime,		&midiMsg[startPayloadPos], lengthPayload,  &global )) return (true);
+	if (load_GS_param( GS_ID_tapDisplayType,		&midiMsg[startPayloadPos], lengthPayload,  &global )) return (true);
+	if (load_GS_param( GS_ID_tapType,				&midiMsg[startPayloadPos], lengthPayload,  &global )) return (true);
+	if (load_GS_param( GS_ID_pedalLedView,			&midiMsg[startPayloadPos], lengthPayload,  &global )) return (true);
+	if (load_GS_param( GS_ID_pedalTunerScheme,		&midiMsg[startPayloadPos], lengthPayload,  &global )) return (true);
+	if (load_GS_param( GS_ID_pedalBrightness,		&midiMsg[startPayloadPos], lengthPayload,  &global )) return (true);
+	if (load_GS_param( GS_ID_pedalsCalibrationLo,	&midiMsg[startPayloadPos], lengthPayload,  &global )) return (true);
+	if (load_GS_param( GS_ID_pedalsCalibrationHi,	&midiMsg[startPayloadPos], lengthPayload,  &global )) return (true);
 
 	// decode banks messages
-	if (load_BS_param( BS_ID_tapCC,	&midiMsg[startPayloadPos], lengthPayload, runtimeEnvironment.activeBankNumber_, &bank, &global )) return (true);
-	if (load_BS_param( BS_ID_pedalsCC, &midiMsg[startPayloadPos], lengthPayload, runtimeEnvironment.activeBankNumber_, &bank, &global )) return (true);
-	if (load_BS_param( BS_ID_tunerCC, &midiMsg[startPayloadPos], lengthPayload, runtimeEnvironment.activeBankNumber_, &bank, &global )) return (true);
-	if (load_BS_param( BS_ID_buttonType, &midiMsg[startPayloadPos], lengthPayload, runtimeEnvironment.activeBankNumber_, &bank, &global )) return (true);
-	if (load_BS_param( BS_ID_buttonContext, &midiMsg[startPayloadPos], lengthPayload, runtimeEnvironment.activeBankNumber_, &bank, &global )) return (true);
-	if (load_BS_param( BS_ID_bankName, &midiMsg[startPayloadPos], lengthPayload, runtimeEnvironment.activeBankNumber_, &bank, &global )) return (true);
+	//load_BS_param( const uint8_t paramID, uint8_t * pData, uint16_t length, GlobalSettings * pGlobals  )
+	if (load_BS_param( BS_ID_tapCC,			&midiMsg[startPayloadPos], lengthPayload, &global )) return (true);
+	if (load_BS_param( BS_ID_pedalsCC,		&midiMsg[startPayloadPos], lengthPayload, &global )) return (true);
+	if (load_BS_param( BS_ID_tunerCC,		&midiMsg[startPayloadPos], lengthPayload, &global )) return (true);
+	if (load_BS_param( BS_ID_buttonType,	&midiMsg[startPayloadPos], lengthPayload, &global )) return (true);
+	if (load_BS_param( BS_ID_buttonContext,	&midiMsg[startPayloadPos], lengthPayload, &global )) return (true);
+	if (load_BS_param( BS_ID_bankName,		&midiMsg[startPayloadPos], lengthPayload, &global )) return (true);
+
 
 	return (false);
 }
