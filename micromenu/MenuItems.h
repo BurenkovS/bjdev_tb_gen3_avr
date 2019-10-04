@@ -89,4 +89,5 @@ extern Menu_Item_t MENU_ITEM_STORAGE KeyLoadBank;
 
 // peters adjunctions
 extern Menu_Item_t MENU_ITEM_STORAGE Send_Dump;
+extern Menu_Item_t MENU_ITEM_STORAGE Dumping;
 #endif /* MENUITEMS_H_ */

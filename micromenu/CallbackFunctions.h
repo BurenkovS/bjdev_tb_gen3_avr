@@ -105,9 +105,6 @@ void Menu_ExpPedalCC_SelectCallback(void);
 void Menu_ExpPedalClb_SelectCallback(void);
 void Menu_ExpPedalClb_EnterCallback(void);
 void Menu_ExpPedalClb_RedrawCallback(void);
-/*void Menu_ExpP1CC_SelectCallback(void);
-void Menu_ExpP2CC_SelectCallback(void);
-void Menu_Exp_OnBrd_SelectCallback(void);*/
 void Menu_Send_tuner_CC_SelectCallback(void);
 void Menu_Button_EnterCallback(void);
 
@@ -187,7 +184,14 @@ void DisplayUpdateHeader(const char* Text);
 //void LoadBank(uint8_t BankNumber, BankSettings *bank);
 
 // peters system settings dump
+
+#if 1
+void Menu_SystemDumpSelectCallback(void);
+void Menu_SystemDumpEnterCallback(void);
+#else
 void Menu_SystemDump(void);
+void Menu_Dumping(void);
+#endif
 
 
 #endif /* CALLBACKFUNCTIONS_H_ */

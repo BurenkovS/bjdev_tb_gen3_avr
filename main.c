@@ -103,7 +103,7 @@ int main(void)
 			handleMidiEventAxeFx(inputMessType,midiMessageFromMidi, inputMessLength);
 			handleMidiEventAxeFx3(inputMessType,midiMessageFromMidi, inputMessLength);
 			handleMidiEventKpa(inputMessType, midiMessageFromMidi); 
-			handleMidiSysExSettings( inputMessType, midiMessageFromMidi, inputMessLength, MAX_MIDI_MESSAGE_LENGTH );
+			handleMidiSysEx( inputMessType, midiMessageFromMidi, inputMessLength, MAX_MIDI_MESSAGE_LENGTH );
 		}
 					
 		lastButtonEvent = getButtonLastEvent();

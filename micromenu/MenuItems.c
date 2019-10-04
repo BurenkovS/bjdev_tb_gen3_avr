@@ -45,6 +45,10 @@ MENU_ITEM(MIDI_channel, Prg_ch_mode, Send_Dump/*Screen_contrast*/, System_Setup,
 // by peter			MENU_ITEM(Restore_defaults, MIDI_channel/*Screen_brightness*/, Bank_max, System_Setup, NULL_MENU, Menu_Restore_defaultsSelectCallback, Menu_Restore_defaultsEnterCallback, NULL, "RESTORE DEFAULT", 0);
 // peters changing
 MENU_ITEM(Restore_defaults, Send_Dump/*Screen_brightness*/, Bank_max, System_Setup, NULL_MENU, Menu_Restore_defaultsSelectCallback, Menu_Restore_defaultsEnterCallback, NULL, "RESTORE DEFAULT", 0);
+//peters
+MENU_ITEM(Send_Dump, MIDI_channel, Restore_defaults, System_Setup, NULL_MENU, Menu_SystemDumpSelectCallback, Menu_SystemDumpEnterCallback, NULL, "SEND DUMP      ", 0);
+//MENU_ITEM(Send_Dump, MIDI_channel, Restore_defaults, System_Setup, Dumping, Menu_SettingsSelectCallback, Menu_SystemDump, NULL, "SEND DUMP      ", 0);
+//MENU_ITEM(Dumping, NULL_MENU, NULL_MENU, Send_Dump, NULL_MENU, Menu_Dumping, NULL, NULL, "DUMPING...     ", 0);
 
 			//TODO uncomment in new PCB
 			//MENU_ITEM(Screen_brightness, Screen_contrast, Bank_max, System_Setup, NULL_MENU, Screen_brightnessSelectCallback, Menu_PwmControllableEnterCallback, NULL, "SCRN BACKLIGHT ", SCREEN_BRIGHTNESS_PWM_NUM);
@@ -162,8 +166,6 @@ MENU_ITEM(Restore_defaults, Send_Dump/*Screen_brightness*/, Bank_max, System_Set
 		MENU_ITEM(Exp_Tap_Tune, Pedal_view, Buttons_setup, Main_screen, TAP, Menu_SettingsSelectCallback, Menu_SystemSetupEnterCallback, NULL, "EXP&TAP&TUNE   ", 0);
 #else
 		MENU_ITEM(Exp_Tap_Tune, Banks, Buttons_setup, Main_screen, TAP, Menu_SettingsSelectCallback, Menu_SystemSetupEnterCallback, NULL, "EXP&TAP&TUNE   ", 0);
-                //peters
-                MENU_ITEM(Send_Dump, MIDI_channel, Restore_defaults, System_Setup, Send_Dump, Menu_SettingsSelectCallback, Menu_SystemDump, NULL, "SEND DUMP      ", 0);
 #endif
 			MENU_ITEM(TAP, Tap_display, BUT_hold_time, Exp_Tap_Tune, NULL_MENU, Menu_TAP_SelectCallback, Menu_SystemSettingsEnterCallback, NULL, "TAP CC         ", 0);
 			MENU_ITEM(Tap_display, Tap_type, TAP, Exp_Tap_Tune, NULL_MENU, Menu_Tap_displaySelectCallback, Menu_SystemSettingsEnterCallback, NULL, "TAP DISPLAY    ", 0);

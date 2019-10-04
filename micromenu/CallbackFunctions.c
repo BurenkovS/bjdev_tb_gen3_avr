@@ -271,7 +271,7 @@ void Display_UpdateSystemSetupValue(FunctionContext *CurrentFunctionContext)
 
 void Menu_SettingsSelectCallback(void)
 {
-	LOG(SEV_TRACE,"%s", __FUNCTION__);	
+	//LOG(SEV_TRACE,"%s", __FUNCTION__);	
 	ClearCurrentContext();
 	
 	setIndicator(0x00, 0);
@@ -368,7 +368,7 @@ void Menu_MainScreenSelectCallback()
 
 void Menu_SystemSetupEnterCallback(void)
 {
-	LOG(SEV_TRACE,"%s", __FUNCTION__);	
+	//LOG(SEV_TRACE,"%s", __FUNCTION__);	
 	Menu_Navigate(MENU_CHILD);
 }
 
@@ -377,7 +377,7 @@ void Menu_SystemSetupEnterCallback(void)
 */
 void Menu_SystemSettingsEnterCallback(void)
 {
-	LOG(SEV_TRACE,"%s", __FUNCTION__);	
+	//LOG(SEV_TRACE,"%s", __FUNCTION__);	
 	setIndicator(' ', 0);
 	Display_UpdateSystemSetupValue(&CurrentFunctionContext);
 }
@@ -628,7 +628,7 @@ void Menu_Restore_defaultsEnterCallback(void)
 
 void Menu_PwmControllableExecuteFunction(void)
 {
-	LOG(SEV_TRACE,"%s", __FUNCTION__);
+	//LOG(SEV_TRACE,"%s", __FUNCTION__);
 	uint8_t *value = CurrentFunctionContext.value;
 	
 	if (CurrentFunctionContext.action == ValueIncrement)
@@ -672,14 +672,14 @@ void Menu_PwmControllableExecuteFunction(void)
 	else if(pwmNum == PEDAL_BRIGHTNESS_PWM_NUM)
 		pwmVal =  global.pedalBrightness;
 
-	LOG(SEV_TRACE,"%s %d %d, max %d min %d", __FUNCTION__, pwmNum, pwmVal, CurrentFunctionContext.max, CurrentFunctionContext.min);
+	//LOG(SEV_TRACE,"%s %d %d, max %d min %d", __FUNCTION__, pwmNum, pwmVal, CurrentFunctionContext.max, CurrentFunctionContext.min);
 	setPwmValueWithScale(pwmNum, pwmVal);
 }
 
 
 void Screen_brightnessSelectCallback(void)
 {
-	LOG(SEV_TRACE,"%s", __FUNCTION__);
+	//LOG(SEV_TRACE,"%s", __FUNCTION__);
 	Menu_SettingsSelectCallback();
 
 	ClearCurrentContext();
@@ -696,7 +696,7 @@ void Screen_brightnessSelectCallback(void)
 
 void Screen_contrastSelectCallback(void)
 {
-	LOG(SEV_TRACE,"%s", __FUNCTION__);
+	//LOG(SEV_TRACE,"%s", __FUNCTION__);
 	Menu_SettingsSelectCallback();
 	
 	ClearCurrentContext();
@@ -712,7 +712,7 @@ void Screen_contrastSelectCallback(void)
 
 void Menu_PwmControllableEnterCallback(void)
 {
-	LOG(SEV_TRACE,"%s", __FUNCTION__);
+	//LOG(SEV_TRACE,"%s", __FUNCTION__);
 	setIndicator(' ', 0);
 	CurrentMenuPosition = MenuSystemSetupInside;
 	CurrentFunctionContext.ExecuteFunction = Menu_PwmControllableExecuteFunction;
@@ -805,7 +805,7 @@ void Menu_ExpPedalClb_EnterCallback(void)
 		global.pLowPos[pedalIndex] = tmpLo;
 		expressionProcessSetInitPositionsAndRange();
 		//save to eeprom
-		LOG(SEV_TRACE,"%s %d %d", __FUNCTION__, offsetof(GlobalSettings, pHighPos), sizeof(global.pHighPos));
+		//LOG(SEV_TRACE,"%s %d %d", __FUNCTION__, offsetof(GlobalSettings, pHighPos), sizeof(global.pHighPos));
 		WriteEEPROM((uint8_t*)global.pHighPos, GlobalSettings_ADDR + offsetof(GlobalSettings, pHighPos), sizeof(global.pHighPos));
 		WriteEEPROM((uint8_t*)global.pLowPos, GlobalSettings_ADDR + offsetof(GlobalSettings, pLowPos), sizeof(global.pLowPos));
 		LCDClear();
@@ -2051,7 +2051,7 @@ void ChangeMessageFunction(void)
 {
 	uint8_t *value = CurrentFunctionContext.value;
 	uint16_t temp_value = 0;
-	LOG(SEV_TRACE,"%s value %d Action %d", __FUNCTION__, *value, CurrentFunctionContext.action);	
+	//LOG(SEV_TRACE,"%s value %d Action %d", __FUNCTION__, *value, CurrentFunctionContext.action);	
 	if (CurrentFunctionContext.action == ValueIncrement)
 	{
 		if (((*value)++) >= CurrentFunctionContext.max)
@@ -2120,7 +2120,7 @@ void ChangeMessageFunction(void)
 		else
 			temp_value = *value;
 			
-		LOG(SEV_TRACE,"%s temp_value %d", __FUNCTION__, temp_value);
+		//LOG(SEV_TRACE,"%s temp_value %d", __FUNCTION__, temp_value);
 		cleanField(CurrentFunctionContext.position, 1, 4);
 		DisplayUpdateCurrentValue(temp_value+1, CurrentFunctionContext.position);
 	}
@@ -2133,7 +2133,7 @@ void ChangeMessageFunction(void)
 /*Change preset number form main screen*/
 void MainScreenExecuteFunction(void)
 {
-	LOG(SEV_TRACE,"%s", __FUNCTION__);	
+	//LOG(SEV_TRACE,"%s", __FUNCTION__);	
 	uint8_t *value = CurrentFunctionContext.value;
 	
 	if (CurrentFunctionContext.action == ValueIncrement)
@@ -2173,7 +2173,7 @@ void MainScreenExecuteFunction(void)
 /*Обработка изменения значения параметров для обычных данных, таких как System Setup*/
 void CommonExecuteFunction(void)
 {
-	LOG(SEV_TRACE,"%s", __FUNCTION__);	
+	//LOG(SEV_TRACE,"%s", __FUNCTION__);	
 	uint8_t *value = CurrentFunctionContext.value;
 	
 	if (CurrentFunctionContext.action == ValueIncrement)
@@ -2429,7 +2429,7 @@ void BankCopyExecuteFunction(void)
 /*Обработка нажатий на клавиши навигации*/
 void Menu_NavigationProcessButtonEvent(ButtonEvent *ButtonEvent)
 {
-	////LOG(SEV_TRACE,"%s", __FUNCTION__);	
+	//LOG(SEV_TRACE,"%s", __FUNCTION__);	
 	CurrentFunctionContext.action = NoAction;
 	
 	switch(ButtonEvent->buttonNum_)
@@ -2535,11 +2535,61 @@ void Menu_NavigationProcessButtonEvent(ButtonEvent *ButtonEvent)
 }
 // peters
 #include "dump.h"
-void Menu_SystemDump(void){
-	LCDClear();
-	LCDWriteStringXY(0,0,"DUMPING...");
-	//_delay_ms( 2000 );
-	save_All();
-	Menu_Navigate(MENU_CHILD);
 
+#if 1
+
+void SystemDumpExecuteFunction()
+{
+	if (CurrentFunctionContext.action == ValueSaveAndExit)
+	{
+		LCDClear();
+		LCDWriteString("DUMPING...");
+		save_All();		
+		ExitCurrentExecuteFunction();
+		return;
+	}
+	else if (CurrentFunctionContext.action == ValueRestoreAndExit)
+	{
+		ExitCurrentExecuteFunction();
+		return;
+	}
+	else
+	return;
 }
+
+void Menu_SystemDumpSelectCallback(void){
+	Menu_SettingsSelectCallback();
+	ClearCurrentContext();
+	CurrentFunctionContext.min = 0;
+	CurrentFunctionContext.max = 0;
+	CurrentFunctionContext.position = 0;
+	CurrentFunctionContext.text[0] = Restore_defaults_str1;
+	DisplayUpdateCurrentValue(0, CurrentFunctionContext.position);
+}
+
+void Menu_SystemDumpEnterCallback(void){
+	setIndicator(' ', 0);
+	CurrentMenuPosition = MenuSystemSetupInside;
+	CurrentFunctionContext.ExecuteFunction = SystemDumpExecuteFunction;
+	setCursor(CurrentFunctionContext.position);
+}
+
+#else
+
+void Menu_SystemDump(void){
+	//LOG(SEV_TRACE,"%s", __FUNCTION__);
+	Menu_Navigate(&Dumping);
+}
+
+
+void Menu_Dumping(void){
+	//LOG(SEV_TRACE,"%s", __FUNCTION__);
+	Menu_SettingsSelectCallback();
+	save_All();
+	//Menu_Navigate(&Send_Dump);
+	//Menu_Navigate(MENU_PARENT);
+
+	ExitCurrentExecuteFunction();
+}
+
+#endif
