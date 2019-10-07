@@ -62,4 +62,9 @@ void handleMidiEventAxeFx(uint8_t in_MessType
 		,uint8_t* midiMessage
 		,uint8_t sys_ex_length);
 
+/*
+ * Maintenance process
+*/		
+void axeFxCommonProcess();
+
 #endif /* AXEFXMIDIEVENTSPROCESS_H_ */

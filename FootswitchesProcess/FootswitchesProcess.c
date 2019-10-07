@@ -265,6 +265,13 @@ void ccConstValProcess(ButtonEvent* buttonEvent)
 		return;
 	
 	uint8_t buttonNum = buttonEvent->buttonNum_;
+	
+	if(runtimeEnvironment.lastCcConstButton_ == buttonNum)//If push on active preset button - send TAP message
+	{
+		sendTapTempo(buttonEvent);
+		return;
+	}
+		
 	runtimeEnvironment.lastCcConstButton_ = buttonNum;
 	uint8_t ccNumToSend = bank.buttonContext[buttonNum].commonContext.contolAndNrpnChangeContext_.ctrlLsbNumber;
 
@@ -278,7 +285,11 @@ void ccConstValProcess(ButtonEvent* buttonEvent)
 	uint8_t currenRelays = bank.buttonContext[buttonNum].relays;
 	relayActionCommon(currenRelays, false);
 
-	updateRequests.updateLedsRq_ = true;		
+	updateRequests.updateLedsRq_ = true;
+	if(runtimeEnvironment.isAxeFx3Connected_ || runtimeEnvironment.isAxeFxConnected_)
+	{
+		runtimeEnvironment.axeSceneChanged_ = true;
+	}
 }
 
 void nrpnToggleProcess(ButtonEvent* buttonEvent)
@@ -418,7 +429,7 @@ void bankChangeProcess(ButtonEvent* buttonEvent, ButtonType buttonType)
 	
 	if(buttonType == BANK_UP)
 	{
-		if(runtimeEnvironment.activeBankNumber_ < global.maxBankNumber)
+		if(runtimeEnvironment.activeBankNumber_ < global.maxBankNumber - 1)
 			++runtimeEnvironment.activeBankNumber_;
 		else
 			runtimeEnvironment.activeBankNumber_ = 0;
@@ -433,7 +444,7 @@ void bankChangeProcess(ButtonEvent* buttonEvent, ButtonType buttonType)
 	else//BANK_TO
 	{
 		uint8_t buttonNum = buttonEvent->buttonNum_;
-		if (bank.buttonContext[buttonNum].bankNumber <= global.maxBankNumber)
+		if (bank.buttonContext[buttonNum].bankNumber <= global.maxBankNumber - 1)
 		{
 			runtimeEnvironment.activeBankNumber_ = bank.buttonContext[buttonNum].bankNumber;
 		}

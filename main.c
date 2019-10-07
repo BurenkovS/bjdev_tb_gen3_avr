@@ -172,6 +172,9 @@ int main(void)
 			updateLed();
 			updateRequests.updateLedsRq_ = 0;
 		}
+		//some other vendor specific processes
+		axeFxCommonProcess(); 
+		
 		
 #if defined (TB_11P_DEVICE) || defined (TB_6P_DEVICE)
 		if(updateRequests.updatePedalLedsRq_)

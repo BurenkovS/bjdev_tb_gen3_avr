@@ -25,10 +25,16 @@ typedef struct RuntimeEnvironment
 	uint8_t activePresetButtonNumber_;
 	uint8_t activePresetNumber_;//Last sent Program Change message from 1st of total 4 message on PC button push
 	uint8_t activeBankNumber_;//Last sent Bank select message from 1st of total 4 message on PC button push
+	//AxeFx related flags
 	bool isAxeFxConnected_;
 	bool isAxeFx3Connected_;
 	AxeFxModelId currentAxeFxModel_;
+	bool axeSceneChanged_; 
+	
+	//Kemper related flags
 	bool isKpaConnected_;
+	
+	//Others
 	bool isTimeToShowPresetName_;
 	bool isTimeToShowTuner_;
 	bool showTapRq_;

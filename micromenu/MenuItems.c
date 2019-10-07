@@ -29,9 +29,9 @@ MENU_ITEM(Main_screen, NULL_MENU, NULL_MENU, NULL_MENU, Banks , Menu_MainScreenS
 			MENU_ITEM(Rename_bank, Save_bank, Copy_bank, Banks, BankName, Menu_SettingsSelectCallback, Menu_SystemSetupEnterCallback, NULL, "RENAME BANK    ", 0);
 				MENU_ITEM(BankName, NULL_MENU, NULL_MENU, Rename_bank, NULL_MENU, Menu_BankName_SelectCallback, NULL, NULL, "BANK NAME  ", 0);
 		MENU_ITEM(System_Setup, Buttons_setup, Banks, Main_screen, MIDI_channel, Menu_SettingsSelectCallback, Menu_SystemSetupEnterCallback, NULL, "SYSTEM SETUP   ", 0);
-// by peter			MENU_ITEM(MIDI_channel, Prg_ch_mode, Restore_defaults/*Screen_contrast*/, System_Setup, NULL_MENU, Menu_MIDIchannelSelectCallback, Menu_SystemSettingsEnterCallback, NULL, "MIDI CHANNEL   ", 0);
-// peters changing
-MENU_ITEM(MIDI_channel, Prg_ch_mode, Send_Dump/*Screen_contrast*/, System_Setup, NULL_MENU, Menu_MIDIchannelSelectCallback, Menu_SystemSettingsEnterCallback, NULL, "MIDI CHANNEL   ", 0);
+		// by peter			MENU_ITEM(MIDI_channel, Prg_ch_mode, Restore_defaults/*Screen_contrast*/, System_Setup, NULL_MENU, Menu_MIDIchannelSelectCallback, Menu_SystemSettingsEnterCallback, NULL, "MIDI CHANNEL   ", 0);
+		// peters changing
+			MENU_ITEM(MIDI_channel, Prg_ch_mode, Send_Dump/*Screen_contrast*/, System_Setup, NULL_MENU, Menu_MIDIchannelSelectCallback, Menu_SystemSettingsEnterCallback, NULL, "MIDI CHANNEL   ", 0);
 			MENU_ITEM(Prg_ch_mode, Bnk_Sel_mode, MIDI_channel, System_Setup, NULL_MENU, Menu_Prg_ch_modeSelectCallback, Menu_SystemSettingsEnterCallback, NULL, "PRG. CH. MODE  ", 0);
 			MENU_ITEM(Bnk_Sel_mode, Show_pr_name, Prg_ch_mode, System_Setup, NULL_MENU, Bnk_Sel_modeSelectCallBack, Menu_SystemSettingsEnterCallback, NULL, "BANK SEL. MODE ", 0);
 			MENU_ITEM(Show_pr_name, Target_device, Bnk_Sel_mode, System_Setup, NULL_MENU, Show_pr_nameSelectCallBack, Menu_SystemSettingsEnterCallback, NULL, "SHOW PR. NAME  ", 0);
@@ -43,9 +43,10 @@ MENU_ITEM(MIDI_channel, Prg_ch_mode, Send_Dump/*Screen_contrast*/, System_Setup,
 				MENU_ITEM(USB_out, MIDI_out, MIDI_out, MIDI_thru_map, NULL_MENU, Menu_USB_out_mapSelectCallback, Menu_SystemSettingsEnterCallback, NULL, "USB IN         ", 0);
 			MENU_ITEM(Bank_max, Restore_defaults, MIDI_thru_map, System_Setup, NULL_MENU, Menu_Bank_maxSelectCallback, Menu_SystemSettingsEnterCallback, NULL, "BANK MAX       ", 0);
 // by peter			MENU_ITEM(Restore_defaults, MIDI_channel/*Screen_brightness*/, Bank_max, System_Setup, NULL_MENU, Menu_Restore_defaultsSelectCallback, Menu_Restore_defaultsEnterCallback, NULL, "RESTORE DEFAULT", 0);
-// peters changing
-MENU_ITEM(Restore_defaults, Send_Dump/*Screen_brightness*/, Bank_max, System_Setup, NULL_MENU, Menu_Restore_defaultsSelectCallback, Menu_Restore_defaultsEnterCallback, NULL, "RESTORE DEFAULT", 0);
-
+			// peters changing
+			MENU_ITEM(Restore_defaults, Send_Dump/*Screen_brightness*/, Bank_max, System_Setup, NULL_MENU, Menu_Restore_defaultsSelectCallback, Menu_Restore_defaultsEnterCallback, NULL, "RESTORE DEFAULT", 0);
+            //peters
+            MENU_ITEM(Send_Dump, MIDI_channel, Restore_defaults, System_Setup, Send_Dump, Menu_SettingsSelectCallback, Menu_SystemDump, NULL, "SEND DUMP      ", 0);
 			//TODO uncomment in new PCB
 			//MENU_ITEM(Screen_brightness, Screen_contrast, Bank_max, System_Setup, NULL_MENU, Screen_brightnessSelectCallback, Menu_PwmControllableEnterCallback, NULL, "SCRN BACKLIGHT ", SCREEN_BRIGHTNESS_PWM_NUM);
 			//MENU_ITEM(Screen_contrast, MIDI_channel, Screen_brightness, System_Setup, NULL_MENU, Screen_contrastSelectCallback, Menu_PwmControllableEnterCallback, NULL, "SCRN CONTRAST ", SCREEN_CONTRAST_PWM_NUM);
@@ -159,11 +160,9 @@ MENU_ITEM(Restore_defaults, Send_Dump/*Screen_brightness*/, Bank_max, System_Set
 				//BANK_TO
 				MENU_ITEM(bankNumber, Type, Type, NULL_MENU, NULL_MENU, Menu_bankNumber_SelectCallback, Menu_bankNumber_EnterCallback, NULL, "", 0);
 #if defined (TB_11P_DEVICE) || defined (TB_6P_DEVICE)
-		MENU_ITEM(Exp_Tap_Tune, Pedal_view, Buttons_setup, Main_screen, TAP, Menu_SettingsSelectCallback, Menu_SystemSetupEnterCallback, NULL, "EXP&TAP&TUNE   ", 0);
+			MENU_ITEM(Exp_Tap_Tune, Pedal_view, Buttons_setup, Main_screen, TAP, Menu_SettingsSelectCallback, Menu_SystemSetupEnterCallback, NULL, "EXP&TAP&TUNE   ", 0);
 #else
-		MENU_ITEM(Exp_Tap_Tune, Banks, Buttons_setup, Main_screen, TAP, Menu_SettingsSelectCallback, Menu_SystemSetupEnterCallback, NULL, "EXP&TAP&TUNE   ", 0);
-                //peters
-                MENU_ITEM(Send_Dump, MIDI_channel, Restore_defaults, System_Setup, Send_Dump, Menu_SettingsSelectCallback, Menu_SystemDump, NULL, "SEND DUMP      ", 0);
+			MENU_ITEM(Exp_Tap_Tune, Banks, Buttons_setup, Main_screen, TAP, Menu_SettingsSelectCallback, Menu_SystemSetupEnterCallback, NULL, "EXP&TAP&TUNE   ", 0);
 #endif
 			MENU_ITEM(TAP, Tap_display, BUT_hold_time, Exp_Tap_Tune, NULL_MENU, Menu_TAP_SelectCallback, Menu_SystemSettingsEnterCallback, NULL, "TAP CC         ", 0);
 			MENU_ITEM(Tap_display, Tap_type, TAP, Exp_Tap_Tune, NULL_MENU, Menu_Tap_displaySelectCallback, Menu_SystemSettingsEnterCallback, NULL, "TAP DISPLAY    ", 0);

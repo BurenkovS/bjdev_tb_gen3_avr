@@ -343,3 +343,12 @@ void handleMidiEventAxeFx(uint8_t in_MessType
         }
     }
 }
+
+void axeFxCommonProcess()
+{
+	if(runtimeEnvironment.axeSceneChanged_)
+	{
+		 requestAxefxInfo(IA_STATE_FUNCTION_ID);
+		 runtimeEnvironment.axeSceneChanged_ = false;
+	}
+}
