@@ -18,7 +18,7 @@
 
 #include <avr/pgmspace.h>
 
-#define TEXTVALUESIZE	18
+#define TEXTVALUESIZE	20
 
 typedef enum
 {

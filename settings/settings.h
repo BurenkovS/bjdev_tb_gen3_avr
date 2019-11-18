@@ -135,7 +135,12 @@ typedef enum
 	ms1200,
 	ms1300,
 	ms1400,
-	ms1500
+	ms1500,
+	ms1600,
+	ms1700,
+	ms1800,
+	ms1900,
+	ms2000
 } HoldTime;
 
 typedef enum
@@ -155,12 +160,12 @@ typedef struct
 	uint8_t checkSumm;//version[0] + version[1] + ... + version[7]	
 }FirmwareVersionInfoInEeprom;
 #define FirmwareVersionInfoInEeprom_ADDR 0x00
-
+ 
 /* –азмер структуры глобальных настроек 18 байт*/
 typedef struct
 {
 	//TODO move bnkNum to runtimeEnvironment!! 
-	uint8_t bnkNum;//“екущий номер банка. ¬ настройках он мен€етс€ когда выбираем банк дл€ сохранени€/загрузки( Banks )
+	uint8_t bnkNum;//“екущий номер банка. ѕри загрузке контроллера переписываем это значение в runtime runtimeEnvironment. ѕосле каждого переключени€ банка перезаписываем это значение чтобы потом стартануть с него
 	uint8_t midiChanNum;//System Setup -> MIDI channel. ƒиапазон от 0 до 15, на экране отображаетс€ от 1 до 16
 	UseBankSelectMess useBankSelectMess;//System Setup -> Prg. ch. mode
 	BankSelectMessType bankSelectMessType;//System Setup -> Bnk. Sel mode
@@ -173,7 +178,7 @@ typedef struct
 	uint8_t screenBrightness;//System Setup -> Screen brightness. отображаем от 1 до 10
 	uint8_t screenContrast;//System Setup ->Screen contrast. от 0 до 255
 	ExpPedalType expPtype[3];//Exp&Tap&Tune -> Exp. P1(2) type.  
-	HoldTime buttonHoldTime;//Exp&Tap&Tune -> BUT hold time. ƒиапазон от 1 до 15, в меню отобржажаетс€ как 100ms, 200ms, ..., 1500ms
+	HoldTime buttonHoldTime;//Exp&Tap&Tune -> BUT hold time. ƒиапазон от 1 до 20, в меню отобржажаетс€ как 100ms, 200ms, ..., 2000ms
 	TapDisplayType tapDisplayType;//Exp&Tap&Tune -> Tap display
 	TapType tapType;//Exp&Tap&Tune -> Tap type
 	PedalLedView pedalLedView;//Pedal view -> Display type
@@ -306,6 +311,6 @@ void loadDefaults(uint32_t banksCount);
 GlobalSettings global;
 BankSettings bank;
 
-uint16_t BanksCount;
+//uint16_t BanksCount;
 
 #endif /* SETTINGS_H_ */

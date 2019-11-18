@@ -33,7 +33,7 @@ bool checkEepromHeader()
 
 void setDefaultGlobalSettings()
 {
-	global.bnkNum = 0;//Текущий номер банка. В настройках он меняется когда выбираем банк для сохранения/загрузки( Banks )
+	//global.bnkNum = 0;//Текущий номер банка. В настройках он меняется когда выбираем банк для сохранения/загрузки( Banks )
 	global.midiChanNum = 0;//System Setup -> MIDI channel. Диапазон от 0 до 15, на экране отображается от 1 до 16
 	global.useBankSelectMess = DONT_USE_BANK_SELECT;//System Setup -> Prg. ch. mode
 	global.bankSelectMessType = MSB;//System Setup -> Bnk. Sel mode
@@ -43,12 +43,12 @@ void setDefaultGlobalSettings()
 	global.usbBaudrate = MIDI_BAUD;//System Setup -> USB baudrate
 	global.inputThrough[0] = IN_TO_NONE; //System Setup ->MIDI thru map
 	global.inputThrough[1] = IN_TO_NONE;
-	global.maxBankNumber = BanksCount;//System Setup ->Max. bank.  
+	global.maxBankNumber = runtimeEnvironment.totalBanksAvalible_ - 1;//System Setup ->Max. bank.  
 	global.screenBrightness = 10;//System Setup -> Screen brightness
 	global.screenContrast = 255;//System Setup ->Screen contrast
 		
 
-	global.buttonHoldTime = ms1500;//Exp&Tap&Tune -> BUT hold time. Диапазон от 1 до 15, в меню отобржажается как 100ms, 200ms, ..., 1500ms
+	global.buttonHoldTime = ms2000;//Exp&Tap&Tune -> BUT hold time. Диапазон от 1 до 20, в меню отобржажается как 100ms, 200ms, ..., 2000ms
 	global.tapDisplayType = ON_SCREEN;//Exp&Tap&Tune -> Tap display
 	global.tapType = TAP_CONST_VALUE;//Exp&Tap&Tune -> Tap type
 	global.pedalLedView = PEDAL_LED_MODE_DUAL;//Pedal view -> Display type
@@ -123,26 +123,24 @@ void loadDefaults(uint32_t banksCount)
 
 void startupSettingsCheckAndLoad()
 {
-	
 	//Check external EEPROM is present
 	if(eepromPresentStartupCheck())
 	{
-		BanksCount = ((TOTAL_EEPROM_SIZE_BYTES - sizeof(FirmwareVersionInfoInEeprom) - sizeof(GlobalSettings))/sizeof(BankSettings));
-		if(BanksCount > 128) 
-			BanksCount = 128;
+		runtimeEnvironment.totalBanksAvalible_ = ((TOTAL_EEPROM_SIZE_BYTES - sizeof(FirmwareVersionInfoInEeprom) - sizeof(GlobalSettings))/sizeof(BankSettings));
+		if(runtimeEnvironment.totalBanksAvalible_ > 128) 
+			runtimeEnvironment.totalBanksAvalible_ = 128;
 	}
 	else
 	{
-		BanksCount = 1;//((INTERNAL_EEPROM_SIZE_BYTES - sizeof(FirmwareVersionInfoInEeprom) - sizeof(GlobalSettings))/sizeof(BankSettings));
+		runtimeEnvironment.totalBanksAvalible_ = 1;
 	}
 	
 	if (checkEepromHeader())
 	{
 		//load setting from EEPROM
-
 		ReadEEPROM((uint8_t*)&global, GlobalSettings_ADDR, sizeof(GlobalSettings));
-		if(global.maxBankNumber > BanksCount)//crutch
-			global.maxBankNumber = BanksCount;
+		if(global.maxBankNumber > runtimeEnvironment.totalBanksAvalible_)//crutch
+			global.maxBankNumber = runtimeEnvironment.totalBanksAvalible_;
 		
 		runtimeEnvironment.activeBankNumber_ = global.bnkNum;
 		
@@ -182,14 +180,14 @@ void startupSettingsCheckAndLoad()
 
 
 	if(loadDef)
-		loadDefaults(BanksCount);
+		loadDefaults(runtimeEnvironment.totalBanksAvalible_);
 	//Write correct version
 	WriteEEPROM((uint8_t*)FIRMWARE_VERSION_STRING, FirmwareVersionInfoInEeprom_ADDR, sizeof(FIRMWARE_VERSION_STRING));
 		
 	LCDClear();
 	LCDWriteStringXY(0,0,"Done!");
 	LCDWriteStringXY(0,1,"Banks :  ");
-	LCDWriteIntXY(8,1,BanksCount, 3);
+	LCDWriteIntXY(8,1,runtimeEnvironment.totalBanksAvalible_, 3);
 	_delay_ms(500);
 	LCDClear();
 }

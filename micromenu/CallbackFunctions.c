@@ -77,7 +77,13 @@ const char HoldTime_str11[] PROGMEM =	"11";
 const char HoldTime_str12[] PROGMEM =	"12";
 const char HoldTime_str13[] PROGMEM =	"13";
 const char HoldTime_str14[] PROGMEM =	"14";
-const char HoldTime_str15[] PROGMEM =	"1500 ms";
+const char HoldTime_str15[] PROGMEM =	"15";
+const char HoldTime_str16[] PROGMEM =	"15";
+const char HoldTime_str17[] PROGMEM =	"15";
+const char HoldTime_str18[] PROGMEM =	"15";
+const char HoldTime_str19[] PROGMEM =	"15";
+const char HoldTime_str20[] PROGMEM =	"2000 ms";
+
 										
 const char TapDisplayType_str1[] PROGMEM = "NOT SHOW TAP ";
 const char TapDisplayType_str2[] PROGMEM = "ON SCREEN    ";
@@ -572,7 +578,7 @@ void Menu_Bank_maxSelectCallback(void)
 	ClearCurrentContext();
 
 	CurrentFunctionContext.min = 1;
-	CurrentFunctionContext.max = BanksCount;
+	CurrentFunctionContext.max = runtimeEnvironment.totalBanksAvalible_;
 	CurrentFunctionContext.position = 0;
 	CurrentFunctionContext.value = &global.maxBankNumber;
 	CurrentFunctionContext.valueAddr = GlobalSettings_ADDR + offsetof(GlobalSettings, maxBankNumber);
@@ -587,7 +593,7 @@ void Restore_defaultsExecuteFunction()
 		LCDClear();
 		LCDWriteString("Resetting...");
 		_delay_ms(500);
-		WriteEEPROM("000", FirmwareVersionInfoInEeprom_ADDR, sizeof("000"));//reset version info from EEPROM. If wrong version will detected, all setting becomes default on start
+		WriteEEPROM((uint8_t*)"000", FirmwareVersionInfoInEeprom_ADDR, sizeof("000"));//reset version info from EEPROM. If wrong version will detected, all setting becomes default on start
 		WDTCR=0x18;
 		WDTCR=0x08;		
 		while(1){};//wait for watchdog reset
@@ -850,7 +856,7 @@ void Menu_BUT_hold_time_typeSelectCallback(void)
 	ClearCurrentContext();
 
 	CurrentFunctionContext.min = 0;
-	CurrentFunctionContext.max = 14;
+	CurrentFunctionContext.max = 19;
 	CurrentFunctionContext.position = 0;
 	CurrentFunctionContext.text[0] = HoldTime_str1;
 	CurrentFunctionContext.text[1] = HoldTime_str2;
@@ -867,6 +873,11 @@ void Menu_BUT_hold_time_typeSelectCallback(void)
 	CurrentFunctionContext.text[12] = HoldTime_str13;
 	CurrentFunctionContext.text[13] = HoldTime_str14;
 	CurrentFunctionContext.text[14] = HoldTime_str15;
+	CurrentFunctionContext.text[15] = HoldTime_str16;
+	CurrentFunctionContext.text[16] = HoldTime_str17;
+	CurrentFunctionContext.text[17] = HoldTime_str18;
+	CurrentFunctionContext.text[18] = HoldTime_str19;
+	CurrentFunctionContext.text[19] = HoldTime_str20;
 	CurrentFunctionContext.value = &global.buttonHoldTime;
 	CurrentFunctionContext.valueAddr = GlobalSettings_ADDR + offsetof(GlobalSettings, buttonHoldTime);
 	
@@ -1755,11 +1766,11 @@ void SelectBankRoutine(void)
 	ClearCurrentContext();
 	
 	CurrentFunctionContext.min = 0;
-	CurrentFunctionContext.max = BanksCount - 1;
+	CurrentFunctionContext.max = runtimeEnvironment.totalBanksAvalible_ - 1;//BanksCount - 1;
 	CurrentFunctionContext.position = 0;
 	
-	CurrentFunctionContext.value = &global.bnkNum;
-	CurrentFunctionContext.valueAddr = GlobalSettings_ADDR + offsetof(GlobalSettings, bnkNum);
+	CurrentFunctionContext.value = &runtimeEnvironment.activeBankNumber_;// &global.bnkNum;
+	CurrentFunctionContext.valueAddr = 0xFFFFFFFF;//GlobalSettings_ADDR + offsetof(GlobalSettings, bnkNum);
 	
 	CurrentMenuPosition = MenuSystemSetupInside;
 }
@@ -1769,7 +1780,7 @@ void Menu_SelectSaveBank_SelectCallback(void)
 	//LOG(SEV_TRACE,"%s", __FUNCTION__);	
 	SelectBankRoutine();
 	
-	DisplayUpdateCurrentValue(global.bnkNum + 1, CurrentFunctionContext.position);
+	DisplayUpdateCurrentValue(/*global.bnkNum*/runtimeEnvironment.activeBankNumber_ + 1, CurrentFunctionContext.position);
 	
 	setIndicator(' ', 0);
 	
@@ -1783,7 +1794,7 @@ void Menu_LoadBank_SelectCallback(void)
 	//LOG(SEV_TRACE,"%s", __FUNCTION__);	
 	SelectBankRoutine();
 	
-	LCDWriteIntXY(11, 0, global.bnkNum + 1, 3);
+	LCDWriteIntXY(11, 0, /*global.bnkNum*/runtimeEnvironment.activeBankNumber_ + 1, 3);
 	LCDWriteStringXY(0, 1, bank.BankName);
 	
 	setIndicator(' ', 0);
@@ -1817,16 +1828,16 @@ void Menu_CopyBank_SelectCallback(void)
 	ClearCurrentContext();
 	
 	CurrentFunctionContext.min = 0;
-	CurrentFunctionContext.max = BanksCount - 1;
+	CurrentFunctionContext.max = runtimeEnvironment.totalBanksAvalible_ - 1;//BanksCount - 1;
 	CurrentFunctionContext.currentValue = 0;
 	
-	CurrentBankIndex = global.bnkNum;
+	CurrentBankIndex = /*global.bnkNum*/runtimeEnvironment.activeBankNumber_;
 	
 	setIndicator(' ', 0);
 	
 	CurrentMenuPosition = MenuCopyBank;
 	
-	DisplayUpdateCurrentValue(global.bnkNum + 1, 4);
+	DisplayUpdateCurrentValue(/*global.bnkNum + 1*/runtimeEnvironment.activeBankNumber_, 4);
 	DisplayUpdateCurrentValue(1, 12);
 	
 	Menu_Navigate(MENU_CHILD);
@@ -2350,14 +2361,14 @@ void BankRenameExecuteFunction(void)
 	}
 	else if (CurrentFunctionContext.action == ValueSaveAndExit)
 	{	
-		WriteEEPROM((uint8_t*)&bank, BankSettings_ADDR(global.bnkNum), sizeof(BankSettings));
+		WriteEEPROM((uint8_t*)&bank, BankSettings_ADDR(/*global.bnkNum*/runtimeEnvironment.activeBankNumber_), sizeof(BankSettings));
 		GotoParentMenuItem(MENU_PARENT);
 			
 		return;
 	}
 	else if (CurrentFunctionContext.action == ValueRestoreAndExit)
 	{
-		ReadEEPROM((uint8_t*)&bank, BankSettings_ADDR(global.bnkNum), sizeof(BankSettings));
+		ReadEEPROM((uint8_t*)&bank, BankSettings_ADDR(/*global.bnkNum*/runtimeEnvironment.activeBankNumber_), sizeof(BankSettings));
 		GotoParentMenuItem(MENU_PARENT);
 		
 		return;

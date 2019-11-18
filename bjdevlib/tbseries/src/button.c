@@ -123,7 +123,7 @@ const ioPort buttonsArray[FOOT_BUTTONS_NUM + CONF_BUTTONS_NUM] PROGMEM = {
 #define SLOW_AUTO_TIME		10
 #define FAST_AUTO_TIME		5
 #define FIRST_AUTO_TIME		20
-#define HOLD_ON_TIME		25
+#define HOLD_ON_TIME		30
 
 uint8_t getButtonState(uint8_t buttonNum)
 {

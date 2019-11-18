@@ -511,22 +511,22 @@ bool load_BS_param( const uint8_t paramID, uint8_t * pData, uint16_t length, uin
 
 void save_All(){
 
-	uint8_t BanksCount;
+	//uint8_t BanksCount;
 	//Check external EEPROM is present
-	if(eepromPresentStartupCheck()){
+	/*if(eepromPresentStartupCheck()){
 		BanksCount = ((TOTAL_EEPROM_SIZE_BYTES - sizeof(FirmwareVersionInfoInEeprom) - sizeof(GlobalSettings))/sizeof(BankSettings));
 		if(BanksCount > 128)
 			BanksCount = 128;
 	}
 	else{
 		BanksCount = 1;//((INTERNAL_EEPROM_SIZE_BYTES - sizeof(FirmwareVersionInfoInEeprom) - sizeof(GlobalSettings))/sizeof(BankSettings));
-	}
+	}*/
 
 	//if (checkEepromHeader()) {
-		GlobalSettings globals;
-		ReadEEPROM((uint8_t*)&globals, GlobalSettings_ADDR, sizeof(GlobalSettings));
-		if(globals.maxBankNumber > BanksCount)//crutch
-			globals.maxBankNumber = BanksCount;
+	GlobalSettings globals;
+	ReadEEPROM((uint8_t*)&globals, GlobalSettings_ADDR, sizeof(GlobalSettings));
+	//if(globals.maxBankNumber > BanksCount)//crutch
+	//	globals.maxBankNumber = BanksCount;
 
 		save_GS_param( GS_ID_bnkNum, &globals );
 		save_GS_param( GS_ID_midiChanNum, &globals );
@@ -550,7 +550,7 @@ void save_All(){
 		save_GS_param( GS_ID_pedalsCalibrationLo, &globals);
 		save_GS_param( GS_ID_pedalsCalibrationHi, &globals);
 
-		for( uint8_t i=0; i < BanksCount; i++ ){
+		for( uint8_t i=0; i < runtimeEnvironment.totalBanksAvalible_; i++ ){
 			BankSettings bank;
 			ReadEEPROM((uint8_t*)&bank, BankSettings_ADDR(i), sizeof(BankSettings));
 
