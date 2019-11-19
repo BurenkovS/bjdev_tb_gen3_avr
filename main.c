@@ -41,22 +41,16 @@ int main(void)
 
 	LCDInit(LS_ULINE);
 	
-	//tlc59731Init();
-	
 	LcdHideCursor();
-	
-	/*TODO Remove this after debug!*/
-	//set brightness and contrast settings
-	//setPwmValueWithScale(PEDAL_BRIGHTNESS_PWM_NUM, 255);
-	//setPwmValueWithScale(SCREEN_BRIGHTNESS_PWM_NUM, 255);
-	//setPwmValueWithScale(SCREEN_CONTRAST_PWM_NUM, 255);
-	/*TODO Remove this after debug!*/
 	
 	ButtonEvent lastButtonEvent;
 	lastButtonEvent = getButtonLastEvent();
 	if(lastButtonEvent.actionType_ == BUTTON_PUSH && lastButtonEvent.buttonNum_ == KEY_LOAD)//enter to self test mode
 		startSelfTest();
-	
+
+	ButtonEvent lastAdcButtonEvent;//for bs-2 pedal
+	lastAdcButtonEvent = getAdcButtonLastEvent();
+		
 	startupSettingsCheckAndLoad();
 	LoadBank(global.bnkNum, (BankSettings*)&bank);
 	initUart1(global.usbBaudrate);
@@ -155,6 +149,10 @@ int main(void)
 		}
 		
 		footswitchesProcess(&lastButtonEvent);
+		
+		lastAdcButtonEvent = getAdcButtonLastEvent();
+		extBs2PedalProcess(&lastAdcButtonEvent);
+		
 		expressionProcess();
 		taskManagerLoop();
 		

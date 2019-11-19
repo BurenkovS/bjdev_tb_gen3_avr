@@ -550,3 +550,36 @@ void footswitchesProcess(ButtonEvent *buttonEvent)
 			tunerOnOffProcess();
 	}
 }
+
+void extBs2PedalProcess(ButtonEvent *buttonEvent)
+{
+	if(buttonEvent->buttonNum_ >= FOOT_BUTTONS_NUM)
+		return;
+	
+	ButtonType buttonType;
+	if(global.bnkSwOnBoard == EXT_PEDAL_BANK_SWITCH)
+		buttonType = (buttonEvent->buttonNum_ == 0) ? BANK_DOWN : BANK_UP;
+	else if(global.bnkSwOnBoard == EXT_PEDAL_PRESET_SWITCH)
+		buttonType = (buttonEvent->buttonNum_ == 0) ? PRESET_DOWN : PRESET_UP;
+	else
+		return;
+		
+	switch(buttonType)
+	{
+		case PRESET_UP :
+			presetUpProcess(buttonEvent);
+		break;
+		
+		case PRESET_DOWN :
+			presetDownProcess(buttonEvent);
+		break;
+		
+		case BANK_UP :
+		case BANK_DOWN :
+		case BANK_TO :
+			bankChangeProcess(buttonEvent, buttonType);
+		break;
+		
+		default: break;
+	}
+}

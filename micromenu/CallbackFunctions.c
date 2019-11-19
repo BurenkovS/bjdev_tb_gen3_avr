@@ -51,8 +51,9 @@ const char USB_baudrate_str2[] PROGMEM = "57600 BAUD";
 
 const char Restore_defaults_str1[] PROGMEM = "CONFIRM";
 	
-const char BnkSwOnBoard_str1[] PROGMEM = "NO EXT. PEDAL";
-const char BnkSwOnBoard_str2[] PROGMEM = "EXT. PEDAL   ";
+const char BnkSwOnBoard_str1[] PROGMEM = "NOT USED      ";
+const char BnkSwOnBoard_str2[] PROGMEM = "SWITCH BANKS  ";
+const char BnkSwOnBoard_str3[] PROGMEM = "SWITCH PRESETS";
 	
 const char InputThrough_str1[] PROGMEM = "NONE          ";
 const char InputThrough_str2[] PROGMEM = "MIDI OUT      ";
@@ -514,10 +515,11 @@ void Menu_BnkSwOnBoardSelectCallback(void)
 	ClearCurrentContext();
 
 	CurrentFunctionContext.min = 0;
-	CurrentFunctionContext.max = 1;
+	CurrentFunctionContext.max = 2;
 	CurrentFunctionContext.position = 0;
 	CurrentFunctionContext.text[0] = BnkSwOnBoard_str1;
 	CurrentFunctionContext.text[1] = BnkSwOnBoard_str2;
+	CurrentFunctionContext.text[2] = BnkSwOnBoard_str3;
 	CurrentFunctionContext.value = &global.bnkSwOnBoard;
 	CurrentFunctionContext.valueAddr = GlobalSettings_ADDR + offsetof(GlobalSettings, bnkSwOnBoard);
 	

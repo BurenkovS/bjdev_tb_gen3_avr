@@ -39,8 +39,9 @@ typedef enum
 typedef enum
 {
 	NO_EXT_PEDAL = 0,
-	EXT_PEDAL
-} BnkSwOnBoard;
+	EXT_PEDAL_BANK_SWITCH,
+	EXT_PEDAL_PRESET_SWITCH,
+} ExternalBs2Pedal;
 
 typedef enum ShowPresetBankEnum
 {
@@ -169,7 +170,7 @@ typedef struct
 	uint8_t midiChanNum;//System Setup -> MIDI channel. Диапазон от 0 до 15, на экране отображается от 1 до 16
 	UseBankSelectMess useBankSelectMess;//System Setup -> Prg. ch. mode
 	BankSelectMessType bankSelectMessType;//System Setup -> Bnk. Sel mode
-	BnkSwOnBoard bnkSwOnBoard;//System Setup -> Bank sw. mode
+	ExternalBs2Pedal bnkSwOnBoard;//System Setup -> Bank sw. mode
 	ShowPresetBank Show_pr_name;//System Setup -> Show pr. name
 	TargetDevice targetDevice;//System Setup -> Target device
 	UsbBaudrate usbBaudrate;//System Setup -> USB baudrate

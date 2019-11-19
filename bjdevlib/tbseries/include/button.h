@@ -31,11 +31,27 @@ typedef enum ButtonActionType//Action type
 	BUTTON_RELEASE_AFTER_HOLD,	//release after hold on
 }ButtonActionType;
 
+
+//keyboard via single ACD input
+#define ADC_BUTTONS_NUM 2//total buttons, connected to ADC input
+
+#define ADC_BUT_HIGH 0xD0//Верхняя граница, если с ацп получили значение выше этого, считаем что кнопка нажата
+#define ADC_BUT_LOW  0x2f//Нижняя граница, если с ацп получили значение ниже этого, считаем что кнопка нажата
+
+
+
 typedef struct
 {
 	ButtonActionType actionType_;
 	uint8_t buttonNum_;				//Button numbers starts from 0 value. Button 0 is marked as "1" on device panel  
 }ButtonEvent;
+
+typedef struct
+{
+	uint8_t adcNum_;
+	uint8_t minVal_;
+	uint8_t maxVal_;
+} AdcButtonsDecs;
 
 /*
  * @brief	Buttons initialization
@@ -47,5 +63,10 @@ void initButtons();
  * @brief	Return last button event - button number and action type
  */
 ButtonEvent getButtonLastEvent();
+
+/*
+ * @brief	Return lastADC  button event - button number and action type
+ */
+ButtonEvent getAdcButtonLastEvent();
 
 #endif /* button_h_ */

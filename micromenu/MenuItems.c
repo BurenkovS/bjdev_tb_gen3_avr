@@ -37,7 +37,7 @@ MENU_ITEM(Main_screen, NULL_MENU, NULL_MENU, NULL_MENU, Banks , Menu_MainScreenS
 			MENU_ITEM(Show_pr_name, Target_device, Bnk_Sel_mode, System_Setup, NULL_MENU, Show_pr_nameSelectCallBack, Menu_SystemSettingsEnterCallback, NULL, "SHOW PR. NAME  ", 0);
 			MENU_ITEM(Target_device, USB_baudrate, Show_pr_name, System_Setup, NULL_MENU, Target_deviceSelectCallback, Menu_SystemSettingsEnterCallback, NULL, "TARGET DEVICE  ", 0);
 			MENU_ITEM(USB_baudrate, Bank_sw_mode, Target_device, System_Setup, NULL_MENU, USB_baudrateSelectCallback, Menu_SystemSettingsEnterCallback, NULL, "USB BAUDRATE   ", 0);
-			MENU_ITEM(Bank_sw_mode, MIDI_thru_map, USB_baudrate, System_Setup, NULL_MENU, Menu_BnkSwOnBoardSelectCallback, Menu_SystemSettingsEnterCallback, NULL, "BANK SW. MODE  ", 0);
+			MENU_ITEM(Bank_sw_mode, MIDI_thru_map, USB_baudrate, System_Setup, NULL_MENU, Menu_BnkSwOnBoardSelectCallback, Menu_SystemSettingsEnterCallback, NULL, "EXT BS-2 PEDAL ", 0);
 			MENU_ITEM(MIDI_thru_map, Bank_max, Bank_sw_mode, System_Setup, MIDI_out, Menu_SettingsSelectCallback, MIDI_thru_mapEnterCallback, NULL, "MIDI THRU MAP  ", 0);
 				MENU_ITEM(MIDI_out, USB_out, USB_out, MIDI_thru_map, NULL_MENU, Menu_MIDI_out_mapSelectCallback, Menu_SystemSettingsEnterCallback, NULL, "MIDI IN        ", 0);
 				MENU_ITEM(USB_out, MIDI_out, MIDI_out, MIDI_thru_map, NULL_MENU, Menu_USB_out_mapSelectCallback, Menu_SystemSettingsEnterCallback, NULL, "USB IN         ", 0);

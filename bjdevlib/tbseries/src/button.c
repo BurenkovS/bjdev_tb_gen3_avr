@@ -13,6 +13,8 @@
 #include "pinout.h"
 #include "portio.h"
 #include "timer.h"
+#include "adc.h"
+#include "expression.h"
 #include <stdint.h>
 #include <util/delay.h>
 #include <avr/pgmspace.h>
@@ -258,4 +260,68 @@ ButtonEvent getButtonLastEvent()
 	    }
     }
     return  buttonEvent;	
+}
+
+AdcButtonsDecs adcButtonsDecs[ADC_BUTTONS_NUM] = {
+		{EXP_P1_ADC_CHAN, 0, ADC_BUT_LOW}
+		,{EXP_P1_ADC_CHAN, ADC_BUT_HIGH, 255}
+};
+uint8_t getAdcButtonState(uint8_t buttonNum)
+{
+	uint8_t adcVal = adcRead8MsbBit(adcButtonsDecs[buttonNum].adcNum_);
+	if ((adcVal >= adcButtonsDecs[buttonNum].minVal_) && (adcVal <= adcButtonsDecs[buttonNum].maxVal_))
+	{
+		_delay_ms(DEBOUNCE_DELAY_MS);
+		adcVal = adcRead8MsbBit(EXP_P1_ADC_CHAN);
+		if ((adcVal >= adcButtonsDecs[buttonNum].minVal_) && (adcVal <= adcButtonsDecs[buttonNum].maxVal_))
+		return KEY_ACTIVE;
+	}
+	return !KEY_ACTIVE;
+}
+
+ButtonActionType adcButtonsLastAction[ADC_BUTTONS_NUM] = {BUTTON_RELEASE ,BUTTON_RELEASE};
+
+ButtonActionType getAdcButtonActionType(unsigned char button_num)
+{
+	if(adcButtonsLastAction[button_num] == BUTTON_RELEASE)
+	{
+		if(getAdcButtonState(button_num) == KEY_ACTIVE)
+		{
+			adcButtonsLastAction[button_num] = BUTTON_PUSH;
+			return BUTTON_PUSH;
+		}
+		return BUTTON_NO_EVENT;
+	}
+	
+	else if(adcButtonsLastAction[button_num] == BUTTON_PUSH)//if was KEY_ACTIVE
+	{
+		//if button released
+		if(getAdcButtonState(button_num) != KEY_ACTIVE)
+		{
+			adcButtonsLastAction[button_num] = BUTTON_RELEASE;
+			return BUTTON_RELEASE;
+		}
+		return BUTTON_NO_EVENT;
+	}
+	return BUTTON_NO_EVENT;
+}
+
+
+ButtonEvent getAdcButtonLastEvent()
+{
+	unsigned char i;
+	ButtonEvent buttonEvent;
+	buttonEvent.actionType_ = BUTTON_NO_EVENT;
+	buttonEvent.buttonNum_ = 0;
+
+	for(i = 0; i < ADC_BUTTONS_NUM; ++i)
+	{
+		buttonEvent.actionType_ = getAdcButtonActionType(i);
+		if(buttonEvent.actionType_ != BUTTON_NO_EVENT)
+		{
+			buttonEvent.buttonNum_ = i;
+			break;
+		}
+	}
+	return buttonEvent;
 }
