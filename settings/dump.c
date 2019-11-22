@@ -812,6 +812,6 @@ bool handleMidiSysExSettings( uint8_t midiMsgType, uint8_t * midiMsg, uint16_t m
 bool handleMidiSysEx( uint8_t midiMsgType, uint8_t * midiMsg, uint16_t midiMsgLength, uint16_t midiBuffLength ){
 	LOG(SEV_TRACE,"%s", __FUNCTION__);
 	bool res = handleMidiSysExSettings( midiMsgType, midiMsg, midiMsgLength, midiBuffLength );
-	if ( res ) send_ACK();
+	send_ACK();
 	return(res);
 }

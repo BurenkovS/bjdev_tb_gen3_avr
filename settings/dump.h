@@ -36,5 +36,4 @@ void save_All();
 ///\return true if decoding is successful, else - false 
 bool handleMidiSysEx( uint8_t midiMsgType, uint8_t * midiMsg, uint16_t midiMsgLength, uint16_t midiBuffLength);
 
-
 #endif /* DUMP_H_ */
