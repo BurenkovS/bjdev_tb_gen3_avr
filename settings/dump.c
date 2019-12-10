@@ -555,11 +555,13 @@ bool load_BS_param( const uint8_t paramID, uint8_t * pData, uint16_t length, Glo
 				}
 				state = BS_ID;
 				bankNumber = pData[counter];
+/*
 				if ( bankNumber > pGlobals->maxBankNumber ){
 					tcode = tcode | (LBS_BAD_BANK_NUM2<<3);
 					*trace= tcode;
 					return (false);
 				}
+*/
 				break;
 			case BS_ID:
 				if ( paramID != pData[counter] ){
