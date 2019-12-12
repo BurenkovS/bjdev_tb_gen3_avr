@@ -12,6 +12,7 @@
 #include "adc.h"
 #include "pinout.h"
 #include "portio.h"
+#include "settings.h"
 #include <avr/pgmspace.h>
 
 #define MAX_PEDALS 3
@@ -68,7 +69,8 @@ void expProcess()
 
 	uint8_t i;
 	uint8_t position;
-	for(i = 0; i < MAX_PEDALS; ++i)
+		
+	for(i = 0 ; i < MAX_PEDALS; ++i)
 	{
 		position = expGetPedalPosition(i);
 		if(position != pedalsPrevValue[i])

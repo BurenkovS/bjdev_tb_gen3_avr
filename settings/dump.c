@@ -700,22 +700,20 @@ void send_EOT(){
 
 void save_All(){
 
-	uint8_t BanksCount;
+	//uint8_t BanksCount;
 	//Check external EEPROM is present
-	if(eepromPresentStartupCheck()){
+	/*if(eepromPresentStartupCheck()){
 		BanksCount = ((TOTAL_EEPROM_SIZE_BYTES - sizeof(FirmwareVersionInfoInEeprom) - sizeof(GlobalSettings))/sizeof(BankSettings));
 		if(BanksCount > 128)
 		BanksCount = 128;
 	}
 	else{
 		BanksCount = 1;//((INTERNAL_EEPROM_SIZE_BYTES - sizeof(FirmwareVersionInfoInEeprom) - sizeof(GlobalSettings))/sizeof(BankSettings));
-	}
+	}*/
 
 	//if (checkEepromHeader()) {
 	GlobalSettings _globals;
 	ReadEEPROM((uint8_t*)&_globals, GlobalSettings_ADDR, sizeof(GlobalSettings));
-	if(_globals.maxBankNumber > BanksCount)//crutch
-	_globals.maxBankNumber = BanksCount;
 
 	save_GS_param( GS_ID_bnkNum,				&_globals);
 	save_GS_param( GS_ID_midiChanNum,			&_globals);

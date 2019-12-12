@@ -90,7 +90,13 @@ void sendTapTempo(ButtonEvent *buttonEvent)
 
 }
 
-void relayActionCommon(uint8_t relayRequared, bool invert)
+/* 
+ * uint8_t relayRequared - 4 relays state
+ * bool invert - invert relay action if neede
+ * bool forceMomentary  - if relay is RELAY_MASK_MOMENTARY type and forceMomentary == true relay will set to forceMomentaryState and will not change state
+ * bool forceMomentaryState - false - relay open, true - relay close
+ */
+void relayActionCommon(uint8_t relayRequared, bool invert, bool forceMomentary,  bool forceMomentaryState)
 {
 	uint8_t relayNum;
 	uint8_t i;
@@ -115,8 +121,18 @@ void relayActionCommon(uint8_t relayRequared, bool invert)
 				break;
 			
 				case RELAY_MASK_MOMENTARY :
-					setRelayClose(relayNum);
-					setTaskRelayOff(relayNum);
+					if(forceMomentary)
+					{
+						if(forceMomentaryState == true)
+							setRelayClose(relayNum);
+						else
+							setRelayOpen(relayNum);
+					}
+					else
+					{
+						setRelayClose(relayNum);
+						setTaskRelayOff(relayNum);
+					}
 					break;
 			
 			default: break;
@@ -177,7 +193,7 @@ void presetChangeProcess(ButtonEvent *buttonEvent)
 
 	//set relays
 	uint8_t currenRelays = bank.buttonContext[buttonNum].relays;
-	relayActionCommon(currenRelays, false);
+	relayActionCommon(currenRelays, false, false, false);
 /*	runtimeEnvironment.isTimeToShowTuner_ = false;//Turn off tuner after preset change*/
 	updateRequests.updateLedsRq_ = 1;
 	updateRequests.updatePedalLedsRq_ = 1;
@@ -186,9 +202,6 @@ void presetChangeProcess(ButtonEvent *buttonEvent)
 
 void ccToggleProcess(ButtonEvent* buttonEvent)
 {
-//	if(buttonEvent->actionType_ != BUTTON_PUSH)//only on button push
-//		return;
-	
 	uint8_t valToSend = 0;
 	uint8_t buttonNum = buttonEvent->buttonNum_;
 	
@@ -211,8 +224,9 @@ void ccToggleProcess(ButtonEvent* buttonEvent)
 	
 		//set relays
 		uint8_t currenRelays = bank.buttonContext[buttonNum].relays;
+		//attach relay state to a button state
 		bool invert = runtimeEnvironment.currentIaState_[buttonNum] == IA_STATE_OFF ? true : false;
-		relayActionCommon(currenRelays, invert);
+		relayActionCommon(currenRelays, invert, false, false);
 		updateRequests.updateLedsRq_ = true;
 	
 		//if button is under the pedal - update pedal leds
@@ -235,7 +249,8 @@ void ccMomentaryProcess(ButtonEvent* buttonEvent)
 {
 	uint8_t buttonNum = buttonEvent->buttonNum_;
 	uint8_t ccNumToSend = bank.buttonContext[buttonNum].commonContext.contolAndNrpnChangeContext_.ctrlLsbNumber;
-
+	uint8_t currenRelays = bank.buttonContext[buttonNum].relays;
+	
 	if(buttonEvent->actionType_ == BUTTON_PUSH)
 	{
 		if(ccNumToSend != CC_OFF_VALUE)//if user not set "OFF" value here
@@ -245,8 +260,7 @@ void ccMomentaryProcess(ButtonEvent* buttonEvent)
 							,global.midiChanNum);
 		}
 							
-		uint8_t currenRelays = bank.buttonContext[buttonNum].relays;
-		relayActionCommon(currenRelays, false);//Relay acts only on button push event if button type is Momentary CC
+		relayActionCommon(currenRelays, false, true, true);//if type is Momentary CC and relay is momentary, relay will close after button push and open after button realse
 	}
 	else if(buttonEvent->actionType_ == BUTTON_RELEASE || buttonEvent->actionType_ == BUTTON_RELEASE_AFTER_HOLD)
 	{
@@ -256,6 +270,7 @@ void ccMomentaryProcess(ButtonEvent* buttonEvent)
 					,bank.buttonContext[buttonNum].commonContext.contolAndNrpnChangeContext_.paramLsbOffValue
 					,global.midiChanNum);
 		}
+		relayActionCommon(currenRelays, false, true, false);//if type is Momentary CC and relay is momentary, relay will close after button push and open after button realse
 	}
 }
 
@@ -265,6 +280,13 @@ void ccConstValProcess(ButtonEvent* buttonEvent)
 		return;
 	
 	uint8_t buttonNum = buttonEvent->buttonNum_;
+	
+	if(runtimeEnvironment.lastCcConstButton_ == buttonNum)//If push on active preset button - send TAP message
+	{
+		sendTapTempo(buttonEvent);
+		return;
+	}
+		
 	runtimeEnvironment.lastCcConstButton_ = buttonNum;
 	uint8_t ccNumToSend = bank.buttonContext[buttonNum].commonContext.contolAndNrpnChangeContext_.ctrlLsbNumber;
 
@@ -276,9 +298,13 @@ void ccConstValProcess(ButtonEvent* buttonEvent)
 	}
 				
 	uint8_t currenRelays = bank.buttonContext[buttonNum].relays;
-	relayActionCommon(currenRelays, false);
+	relayActionCommon(currenRelays, false, false, false);
 
-	updateRequests.updateLedsRq_ = true;		
+	updateRequests.updateLedsRq_ = true;
+	if(runtimeEnvironment.isAxeFx3Connected_ || runtimeEnvironment.isAxeFxConnected_)
+	{
+		runtimeEnvironment.axeSceneChanged_ = true;
+	}
 }
 
 void nrpnToggleProcess(ButtonEvent* buttonEvent)
@@ -369,6 +395,21 @@ void presetUpProcess(ButtonEvent* buttonEvent)
 		if(global.useBankSelectMess == USE_BANK_SELECT)//Also need to increment BS message value here
 			cycleIncUcahrVal(&runtimeEnvironment.activeBankNumber_, MAX_BANK_SELECT_MESSAGE_VALUE);
 	}
+	
+	sendPcWithOptionalBs(runtimeEnvironment.activePresetNumber_
+		,runtimeEnvironment.activeBankNumber_
+		,global.midiChanNum
+		,global.bankSelectMessType
+		,global.useBankSelectMess);
+
+	
+	if (runtimeEnvironment.isAxeFxConnected_ == true)//Если акс подключен то отправим запрос на состояние эффектов
+	{
+		requestAxefxInfo(IA_STATE_FUNCTION_ID);
+		runtimeEnvironment.isTimeToShowPresetName_ = 0;//и будем показывать имя банка, пока не придет имя пресета
+	}
+	updateRequests.updateScreenRq_++;
+		
 }
 
 void presetDownProcess(ButtonEvent* buttonEvent)
@@ -381,6 +422,19 @@ void presetDownProcess(ButtonEvent* buttonEvent)
 		if(global.useBankSelectMess == USE_BANK_SELECT)//Also need to increment BS message value here
 			cycleDecUcahrVal(&runtimeEnvironment.activeBankNumber_, MAX_BANK_SELECT_MESSAGE_VALUE);
 	}
+	
+	sendPcWithOptionalBs(runtimeEnvironment.activePresetNumber_
+			,runtimeEnvironment.activeBankNumber_
+			,global.midiChanNum
+			,global.bankSelectMessType
+			,global.useBankSelectMess);
+
+	if (runtimeEnvironment.isAxeFxConnected_ == true)//Если акс подключен то отправим запрос на состояние эффектов
+	{
+		requestAxefxInfo(IA_STATE_FUNCTION_ID);
+		runtimeEnvironment.isTimeToShowPresetName_ = 0;//и будем показывать имя банка, пока не придет имя пресета
+	}
+	updateRequests.updateScreenRq_++;	
 }
 
 void bankChangeProcess(ButtonEvent* buttonEvent, ButtonType buttonType)
@@ -390,7 +444,7 @@ void bankChangeProcess(ButtonEvent* buttonEvent, ButtonType buttonType)
 	
 	if(buttonType == BANK_UP)
 	{
-		if(runtimeEnvironment.activeBankNumber_ < global.maxBankNumber)
+		if(runtimeEnvironment.activeBankNumber_ < global.maxBankNumber - 1)
 			++runtimeEnvironment.activeBankNumber_;
 		else
 			runtimeEnvironment.activeBankNumber_ = 0;
@@ -405,7 +459,7 @@ void bankChangeProcess(ButtonEvent* buttonEvent, ButtonType buttonType)
 	else//BANK_TO
 	{
 		uint8_t buttonNum = buttonEvent->buttonNum_;
-		if (bank.buttonContext[buttonNum].bankNumber <= global.maxBankNumber)
+		if (bank.buttonContext[buttonNum].bankNumber <= global.maxBankNumber - 1)
 		{
 			runtimeEnvironment.activeBankNumber_ = bank.buttonContext[buttonNum].bankNumber;
 		}
@@ -489,10 +543,43 @@ void footswitchesProcess(ButtonEvent *buttonEvent)
 		
 		default: break;
 	}
-	//toggle tuner on any button hold, exept CCT with freeze
+	//toggle tuner on any button hold, except CCT with freeze
 	if(buttonEvent->actionType_ == BUTTON_HOLDON)
 	{
 		if(!(buttonType == CC_TOGGLE && bank.buttonContext[buttonEvent->buttonNum_].commonContext.contolAndNrpnChangeContext_.ctrlMsbFreezeNumber != CC_OFF_VALUE))
 			tunerOnOffProcess();
+	}
+}
+
+void extBs2PedalProcess(ButtonEvent *buttonEvent)
+{
+	if(buttonEvent->buttonNum_ >= FOOT_BUTTONS_NUM)
+		return;
+	
+	ButtonType buttonType;
+	if(global.bnkSwOnBoard == EXT_PEDAL_BANK_SWITCH)
+		buttonType = (buttonEvent->buttonNum_ == 0) ? BANK_DOWN : BANK_UP;
+	else if(global.bnkSwOnBoard == EXT_PEDAL_PRESET_SWITCH)
+		buttonType = (buttonEvent->buttonNum_ == 0) ? PRESET_DOWN : PRESET_UP;
+	else
+		return;
+		
+	switch(buttonType)
+	{
+		case PRESET_UP :
+			presetUpProcess(buttonEvent);
+		break;
+		
+		case PRESET_DOWN :
+			presetDownProcess(buttonEvent);
+		break;
+		
+		case BANK_UP :
+		case BANK_DOWN :
+		case BANK_TO :
+			bankChangeProcess(buttonEvent, buttonType);
+		break;
+		
+		default: break;
 	}
 }

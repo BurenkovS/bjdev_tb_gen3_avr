@@ -13,6 +13,8 @@
 
 void footswitchesProcess(ButtonEvent *buttonEvent);
 
+void extBs2PedalProcess(ButtonEvent *buttonEvent);
+
 //common function for switch tuner off and on
 void tunerOnOffProcess();
 

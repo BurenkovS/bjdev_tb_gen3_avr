@@ -100,7 +100,13 @@ void singlePedalProcess(uint8_t pedalNum)
 void expressionProcess()
 {
 	uint8_t i;
-	for(i = 0; i < TOTAL_EXPRESSIONS_PEDALS; ++i)
+	
+	if(global.bnkSwOnBoard == NO_EXT_PEDAL)
+		i = 0;
+	else
+		i = 1;//pass out expression pedal 1 if BS-2 is using
+		
+	for( ; i < TOTAL_EXPRESSIONS_PEDALS; ++i)
 		singlePedalProcess(i);
 }
 
