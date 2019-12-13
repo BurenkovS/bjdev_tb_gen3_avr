@@ -38,23 +38,6 @@ bool decodeByte( uint8_t * pData, uint8_t * byte ){
 	return(true);
 }
 
-#if 0
-static inline
-bool decode14bits( uint8_t * pData, uint16_t * word ){
-	uint16_t _data[2] = {0,0};
-
-	if ( NULL == pData )	return(false);
-	if ( NULL == word)		return(false);
-
-	for ( uint8_t i=0; i<2; i++ ){
-		if ( pData[i] > 0x7F ) return(false);
-		_data[i] = pData[i];
-	}
-	*word = ((_data[0]<<7)&0x3F80)|(_data[1]&0x007F);
-	return(true);
-}
-#endif
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///
 ///									T R A C E		S E T T I N G S
@@ -109,31 +92,6 @@ TRACE FUNCTIONS CODE in bits, send as bytes chain in ack message
 #define LBS_COUNTER_OVERRUN				(8)
 #define LBS_BAD_GDL_BS					(9)
 #define LBS_NO_DECODE_BYTE				(8)
-
-/*
-uint8_t bnkNum;//Текущий номер банка. В настройках он меняется когда выбираем банк для сохранения/загрузки( Banks )
-uint8_t midiChanNum;//System Setup -> MIDI channel. Диапазон от 0 до 15, на экране отображается от 1 до 16
-UseBankSelectMess useBankSelectMess;//System Setup -> Prg. ch. mode
-BankSelectMessType bankSelectMessType;//System Setup -> Bnk. Sel mode
-BnkSwOnBoard bnkSwOnBoard;//System Setup -> Bank sw. mode
-ShowPresetBank Show_pr_name;//System Setup -> Show pr. name
-TargetDevice targetDevice;//System Setup -> Target device
-UsbBaudrate usbBaudrate;//System Setup -> USB baudrate
-InputThrough inputThrough[TOTAL_MIDI_INTERFACES]; //System Setup ->MIDI thru map
-uint8_t maxBankNumber;//System Setup ->Max. bank
-uint8_t screenBrightness;//System Setup -> Screen brightness. отображаем от 1 до 10
-uint8_t screenContrast;//System Setup ->Screen contrast. от 0 до 255
-ExpPedalType expPtype[3];//Exp&Tap&Tune -> Exp. P1(2) type.
-HoldTime buttonHoldTime;//Exp&Tap&Tune -> BUT hold time. Диапазон от 1 до 15, в меню отобржажается как 100ms, 200ms, ..., 1500ms
-TapDisplayType tapDisplayType;//Exp&Tap&Tune -> Tap display
-TapType tapType;//Exp&Tap&Tune -> Tap type
-PedalLedView pedalLedView;//Pedal view -> Display type
-PedalTunerScheme pedalTunerScheme;//Pedal view -> Tuner scheme. Тут пока только два значения 0 и 1. Отобразить можно как Scheme 1 и  Scheme 2
-uint8_t pedalBrightness;//Pedal view -> BRIGHTNESS. Яркость светодидов педали. отображаем от 1 до 10
-//This setting are not mapped into GUI, but is stores in global settings during pedals calibration
-uint8_t pLowPos[3];
-uint8_t pHighPos[3];
-*/
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///
@@ -396,19 +354,6 @@ bool load_GS_param( const uint8_t paramID, uint8_t * pData, uint16_t length, con
 	return (true);
 }
 
-/*
-typedef struct
-{
-CtrlChangeNum tapCc;
-CtrlChangeNum pedalsCc[4];//0,1 - external pedals, 2 - onbpard pedal, 2 - onboard pedal alternate number
-CtrlChangeNum tunerCc;
-
-ButtonType buttonType[FOOT_BUTTONS_NUM];
-ButtonContext buttonContext[FOOT_BUTTONS_NUM];
-
-char BankName[BANK_NAME_NMAX_SIZE];
-} BankSettings;
-*/
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///
@@ -699,13 +644,6 @@ void send_EOT(){
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void save_All(){
-
-	uint8_t BanksCount;
-
-	BanksCount = ((TOTAL_EEPROM_SIZE_BYTES - sizeof(FirmwareVersionInfoInEeprom) - sizeof(GlobalSettings))/sizeof(BankSettings));
-	if(BanksCount > 128) BanksCount = 128;
-
-
 	GlobalSettings _globals;
 	ReadEEPROM((uint8_t*)&_globals, GlobalSettings_ADDR, sizeof(GlobalSettings));
 
@@ -731,7 +669,7 @@ void save_All(){
 	save_GS_param( GS_ID_pedalsCalibrationLo,	&_globals);
 	save_GS_param( GS_ID_pedalsCalibrationHi,	&_globals);
 
-	for( uint8_t i=0; i < BanksCount; i++ ){
+	for( uint8_t i=0; i < runtimeEnvironment.totalBanksAvalible_; i++ ){
 		BankSettings _bank;
 		ReadEEPROM((uint8_t*)&_bank, BankSettings_ADDR(i), sizeof(BankSettings));
 
@@ -745,7 +683,6 @@ void save_All(){
 		save_BS_param( BS_ID_bankName,	i, &_bank );
 	}
 	send_EOT();
-	//}
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
