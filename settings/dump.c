@@ -990,7 +990,7 @@ bool handleMidiSysExSettings( uint8_t midiMsgType, uint8_t * midiMsg, uint16_t m
 	return (false);
 }
 
-bool handleMidiSysEx( uint8_t midiMsgType, uint8_t * midiMsg, uint16_t midiMsgLength, uint16_t midiBuffLength ){
+bool handleMidiSysExSettings( uint8_t midiMsgType, uint8_t * midiMsg, uint16_t midiMsgLength, uint16_t midiBuffLength ){
 	LOG(SEV_TRACE,"%s", __FUNCTION__);
 	uint8_t trace[TRACE_LENGTH];
 	memset( trace, 0 , TRACE_LENGTH );
