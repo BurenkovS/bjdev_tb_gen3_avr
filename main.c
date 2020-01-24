@@ -12,6 +12,7 @@
 #include "AxeFxMidiEventsProcess.h"
 #include "AxeFx3MidiEventsProcess.h"
 #include "KpaMidiEventsProcess.h"
+#include "GmajorMidiEventsProcess.h"
 #include "LedProcess.h"
 #include "PedalLedProcess.h"
 #include "RuntimeEnvironment.h"
@@ -97,6 +98,7 @@ int main(void)
 			handleMidiEventAxeFx(inputMessType,midiMessageFromMidi, inputMessLength);
 			handleMidiEventAxeFx3(inputMessType,midiMessageFromMidi, inputMessLength);
 			handleMidiEventKpa(inputMessType, midiMessageFromMidi); 
+			handleMidiEventGMajor(inputMessType,midiMessageFromMidi, inputMessLength);
 			handleMidiSysExSettings( inputMessType, midiMessageFromMidi, inputMessLength, MAX_MIDI_MESSAGE_LENGTH );
 		}
 					
