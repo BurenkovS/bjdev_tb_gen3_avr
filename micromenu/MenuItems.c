@@ -42,11 +42,12 @@ MENU_ITEM(Main_screen, NULL_MENU, NULL_MENU, NULL_MENU, Banks , Menu_MainScreenS
 				MENU_ITEM(MIDI_out, USB_out, USB_out, MIDI_thru_map, NULL_MENU, Menu_MIDI_out_mapSelectCallback, Menu_SystemSettingsEnterCallback, NULL, "MIDI IN        ", 0);
 				MENU_ITEM(USB_out, MIDI_out, MIDI_out, MIDI_thru_map, NULL_MENU, Menu_USB_out_mapSelectCallback, Menu_SystemSettingsEnterCallback, NULL, "USB IN         ", 0);
 			MENU_ITEM(Bank_max, Restore_defaults, MIDI_thru_map, System_Setup, NULL_MENU, Menu_Bank_maxSelectCallback, Menu_SystemSettingsEnterCallback, NULL, "BANK MAX       ", 0);
-// by peter			MENU_ITEM(Restore_defaults, MIDI_channel/*Screen_brightness*/, Bank_max, System_Setup, NULL_MENU, Menu_Restore_defaultsSelectCallback, Menu_Restore_defaultsEnterCallback, NULL, "RESTORE DEFAULT", 0);
+			// by peter			MENU_ITEM(Restore_defaults, MIDI_channel/*Screen_brightness*/, Bank_max, System_Setup, NULL_MENU, Menu_Restore_defaultsSelectCallback, Menu_Restore_defaultsEnterCallback, NULL, "RESTORE DEFAULT", 0);
 			// peters changing
 			MENU_ITEM(Restore_defaults, Send_Dump/*Screen_brightness*/, Bank_max, System_Setup, NULL_MENU, Menu_Restore_defaultsSelectCallback, Menu_Restore_defaultsEnterCallback, NULL, "RESTORE DEFAULT", 0);
-            //peters
-            MENU_ITEM(Send_Dump, MIDI_channel, Restore_defaults, System_Setup, Send_Dump, Menu_SettingsSelectCallback, Menu_SystemDump, NULL, "SEND DUMP      ", 0);
+			//peters
+			MENU_ITEM(Send_Dump, MIDI_channel, Restore_defaults, System_Setup, NULL_MENU, Menu_SystemDumpSelectCallback, Menu_SystemDumpEnterCallback, NULL, "SEND DUMP      ", 0);
+
 			//TODO uncomment in new PCB
 			//MENU_ITEM(Screen_brightness, Screen_contrast, Bank_max, System_Setup, NULL_MENU, Screen_brightnessSelectCallback, Menu_PwmControllableEnterCallback, NULL, "SCRN BACKLIGHT ", SCREEN_BRIGHTNESS_PWM_NUM);
 			//MENU_ITEM(Screen_contrast, MIDI_channel, Screen_brightness, System_Setup, NULL_MENU, Screen_contrastSelectCallback, Menu_PwmControllableEnterCallback, NULL, "SCRN CONTRAST ", SCREEN_CONTRAST_PWM_NUM);

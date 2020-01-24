@@ -89,6 +89,12 @@ int main(void)
 	
 	ledCheck(1);
 
+#if 0
+	uint8_t arr[MAX_MIDI_MESSAGE_LENGTH] = {0xf0, 0, 0x7f, 0x7f, 0, 0, 1, 1, 0, 0, 0, 1, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 0, 1, 0x0a, 7, 0x0f, 7, 0x0f, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xf7};
+	handleMidiSysExSettings( MIDI_SYSEX_START, arr, 98, MAX_MIDI_MESSAGE_LENGTH );
+#endif
+
+
     while (1) 
     {
 		if(midiRead(MIDI_INTERFACE, midiMessageFromMidi, &inputMessType, &inputMessLength))
