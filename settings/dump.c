@@ -991,10 +991,34 @@ bool handleMidiSysExSettings( uint8_t midiMsgType, uint8_t * midiMsg, uint16_t m
 
 bool handleMidiSysExConfig( uint8_t midiMsgType, uint8_t * midiMsg, uint16_t midiMsgLength, uint16_t midiBuffLength ){
 	LOG(SEV_TRACE,"%s", __FUNCTION__);
-	uint8_t trace[TRACE_LENGTH];
-	memset( trace, 0 , TRACE_LENGTH );
-	bool res = handleMidiSysExSettings( midiMsgType, midiMsg, midiMsgLength, midiBuffLength, trace );
-	//send_ACK();
-	send_ACK_TRACE( trace );
+	bool		res = false;
+	uint8_t		trace[TRACE_LENGTH];
+	uint32_t	manfId = MANUFACTURER_ID;
+	if (
+		(MIDI_SYSEX_START		== midiMsg[0])
+		&&
+		(((manfId >> 16) & 0x7F)== midiMsg[1])
+		&&
+		(((manfId >> 8) & 0x7F)	== midiMsg[2])
+		&&
+		((manfId & 0x7F)		== midiMsg[3])
+		&&
+		(NETWORK_NUMBER			== midiMsg[4])
+		&&
+		(MODEL_NUMBER			== midiMsg[5])
+	){
+		memset( trace, 0 , TRACE_LENGTH );
+		res = handleMidiSysExSettings( midiMsgType, midiMsg, midiMsgLength, midiBuffLength, trace );
+
+		if ( false == res ){
+			uint8_t tcode = trace[0];
+			if ((handleMidiSysExSettings_ID == (tcode & 0x03)) && (0 == (tcode & 0x04))){
+				uint8_t error = (tcode>>3) & 0x0f;
+				if ( HMS_BAD_FIRST_CHECK == error ) return(res);
+			}
+		}
+		//send_ACK();
+		send_ACK_TRACE( trace );
+	}
 	return(res);
 }
