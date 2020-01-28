@@ -75,7 +75,7 @@ typedef enum
 typedef enum
 {
 	MIDI_BAUD = 0,
-	CUSTOM_BAUD_56000
+	CUSTOM_BAUD_57600
 } UsbBaudrate;
 
 typedef enum 
@@ -229,7 +229,7 @@ typedef struct
 	uint16_t iaState;//14 bit	
 }PresetChangeContext;
 
-
+#define VENDOR_BLOCK_ID_NONE 255 
 typedef struct
 {
 	uint8_t ctrlMsbFreezeNumber;//MSB num for MRPN message or CC num for 
@@ -239,6 +239,7 @@ typedef struct
     uint8_t paramMsbOffValue;
     uint8_t paramLsbOffValue;//CC val for CC message
 	uint8_t autoSendState;
+	uint8_t vendorBlockId;//custom number from vendor SysEx, attach to this button as IA 
 } ContolAndNrpnChangeContext;//This is using for all CC and NRPN button types
 
 typedef struct
@@ -253,7 +254,7 @@ typedef union commonContext
 {
 	NoteOnConstContext			noteOnConstContext_;
 	ContolAndNrpnChangeContext  contolAndNrpnChangeContext_;
-	BankNumber					bankNumber;
+	BankNumber					bankNumber;//TODO check same name at ButtonContext
 } CommonContext;
 
 #define BUTTON_NAME_MAX_SIZE	17
@@ -262,7 +263,7 @@ typedef struct buttonContext
 	uint8_t					relays;//Used in most type of buttons, so let it be always available 
 	PresetChangeContext		presetChangeContext;
 	CommonContext			commonContext;
-	BankNumber				bankNumber;
+	BankNumber				bankNumber;//for "BANK TO" type
 	char					nameAlias[BUTTON_NAME_MAX_SIZE];//some text data
 } ButtonContext;
 
@@ -277,6 +278,8 @@ typedef struct
 	ButtonContext buttonContext[FOOT_BUTTONS_NUM];
 	
 	char BankName[BANK_NAME_NMAX_SIZE];
+	uint8_t selectBankAction;
+	uint8_t selectBankActionProgNum;
 } BankSettings;
 
 /*Адресация банков начинается с 0. Отображается для пользователя с 1*/

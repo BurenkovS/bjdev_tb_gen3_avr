@@ -34,6 +34,6 @@ void save_All();
 ///\param midiMsgLength[in]		- midi message length
 ///\param midiBuffLength[in]	- midi buffer length
 ///\return true if decoding is successful, else - false 
-bool handleMidiSysExSettings( uint8_t midiMsgType, uint8_t * midiMsg, uint16_t midiMsgLength, uint16_t midiBuffLength);
+bool handleMidiSysExConfig( uint8_t midiMsgType, uint8_t * midiMsg, uint16_t midiMsgLength, uint16_t midiBuffLength);
 
 #endif /* DUMP_H_ */

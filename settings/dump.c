@@ -345,9 +345,8 @@ bool load_GS_param( const uint8_t paramID, uint8_t * pData, uint16_t length, con
 	}
 
 	// write to eeprom
-	//if (checkEepromHeader()) {
 	WriteEEPROM((uint8_t*)pGlobals + DataOffset, GlobalSettings_ADDR + DataOffset, DataLen);
-	//}
+
 	//LOG(SEV_TRACE, "%s tapDisplayType=%d", __FUNCTION__, tapDisplayType );
 	tcode = tcode | ( 1 << 2 );
 	*trace= tcode;
@@ -402,7 +401,7 @@ bool getDataAndLenghtBS(uint8_t paramID, uint16_t* pDataLen, uint32_t* pDataOffs
 			*pDataOffset	= offsetof(BankSettings, BankName);
 			break;
 		default:
-		return(false);
+			return(false);
 	}
 	return(true);
 }
@@ -990,7 +989,7 @@ bool handleMidiSysExSettings( uint8_t midiMsgType, uint8_t * midiMsg, uint16_t m
 	return (false);
 }
 
-bool handleMidiSysExSettings( uint8_t midiMsgType, uint8_t * midiMsg, uint16_t midiMsgLength, uint16_t midiBuffLength ){
+bool handleMidiSysExConfig( uint8_t midiMsgType, uint8_t * midiMsg, uint16_t midiMsgLength, uint16_t midiBuffLength ){
 	LOG(SEV_TRACE,"%s", __FUNCTION__);
 	uint8_t trace[TRACE_LENGTH];
 	memset( trace, 0 , TRACE_LENGTH );

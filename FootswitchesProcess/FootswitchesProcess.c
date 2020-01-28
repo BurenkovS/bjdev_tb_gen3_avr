@@ -465,9 +465,16 @@ void bankChangeProcess(ButtonEvent* buttonEvent, ButtonType buttonType)
 		}
 			
 	}
-
+	
+	//reset IA state 
+	uint8_t i;
+	for(i = 0; i < FOOT_BUTTONS_NUM; ++i)
+		runtimeEnvironment.currentIaState_[i] = IA_STATE_OFF;
+		
 	LoadBank(runtimeEnvironment.activeBankNumber_, &bank);
-	updateRequests.updateScreenRq_ = true;			
+	updateRequests.updateScreenRq_ = true;	
+	updateRequests.updateLedsRq_ = true;
+	updateRequests.updatePedalLedsRq_ = true;			
 }
 
 void tunerOnOffProcess()

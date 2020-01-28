@@ -40,7 +40,7 @@ void setDefaultGlobalSettings()
 	global.bnkSwOnBoard = NO_EXT_PEDAL;//System Setup -> Bank sw. mode
 	global.Show_pr_name = PRESET_AND_BANK;//System Setup -> Show pr. name
 	global.targetDevice = TARGET_DEVICE_AUTO;//System Setup -> Target device
-	global.usbBaudrate = MIDI_BAUD;//System Setup -> USB baudrate
+	global.usbBaudrate = CUSTOM_BAUD_57600;//System Setup -> USB baudrate
 	global.inputThrough[0] = IN_TO_NONE; //System Setup ->MIDI thru map
 	global.inputThrough[1] = IN_TO_NONE;
 	global.maxBankNumber = runtimeEnvironment.totalBanksAvalible_ - 1;//System Setup ->Max. bank.  
@@ -75,6 +75,9 @@ void setDefaultBankSettings()
 	bank.tapCc = 30;
 	bank.tunerCc = 31;
 	
+	bank.selectBankAction = 0;
+	bank.selectBankActionProgNum = 0;
+	
 	uint32_t i;
 	for (i = 0; i < FOOT_BUTTONS_NUM; ++i)
 	{
@@ -94,6 +97,8 @@ void setDefaultBankSettings()
 		bank.buttonContext[i].commonContext.contolAndNrpnChangeContext_.paramMsbOffValue = 0x00;
 		bank.buttonContext[i].commonContext.contolAndNrpnChangeContext_.paramLsbOnValue = 127;
 		bank.buttonContext[i].commonContext.contolAndNrpnChangeContext_.paramMsbOnValue = 127;
+		
+		bank.buttonContext[i].commonContext.contolAndNrpnChangeContext_.vendorBlockId = VENDOR_BLOCK_ID_NONE;
 	}
 }
 
@@ -117,6 +122,10 @@ void loadDefaults(uint32_t banksCount)
 		//Create unique bank name
 		sprintf(bnkNameWithNum, "Unnamed %d", i+1);//TODO possible need remove sprintf to reduce code size
 		strcpy((char*)&(bank.BankName), bnkNameWithNum);
+
+		//set program change message after bank selection according bank number by default
+		bank.selectBankActionProgNum = i;
+				
 		WriteEEPROM((uint8_t*)&bank, BankSettings_ADDR(i), sizeof(bank));
 	}
 }
@@ -143,13 +152,8 @@ void startupSettingsCheckAndLoad()
 			global.maxBankNumber = runtimeEnvironment.totalBanksAvalible_;
 		
 		runtimeEnvironment.activeBankNumber_ = global.bnkNum;
-		
 			
 		ReadEEPROM((uint8_t*)&bank, BankSettings_ADDR(runtimeEnvironment.activeBankNumber_), sizeof(BankSettings));
-		/*LCDClear();
-		LCDWriteStringXY(0,1,"Banks :  ");
-		LCDWriteIntXY(8,1,BanksCount, 3);
-		_delay_ms(500);*/
 		return;
 	}
 	
