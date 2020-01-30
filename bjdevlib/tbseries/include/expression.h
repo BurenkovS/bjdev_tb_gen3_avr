@@ -15,6 +15,8 @@
 #include "pinout.h"
 #include <stdint.h>
 
+#define MAX_PHY_PEDALS 3 //maximum physical pedals on controller series
+
 typedef enum PedalNumber
 {
 	EXP_PEDAL1 = 0

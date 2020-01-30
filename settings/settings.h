@@ -268,10 +268,16 @@ typedef struct buttonContext
 } ButtonContext;
 
 #define BANK_NAME_NMAX_SIZE	13
+#define FIRST_EXT_PEDAL 0
+#define SECOND_EXT_PEDAL 1
+
+#define ONBOARD_PEDAL 2
+#define ONBOARD_PEDAL_ALT 3//same physical pedal as ONBOARD_PEDAL
+
 typedef struct
 {
 	CtrlChangeNum tapCc;
-	CtrlChangeNum pedalsCc[4];//0,1 - external pedals, 2 - onbpard pedal, 3 - onboard pedal alternate number
+	CtrlChangeNum pedalsCc[MAX_PHY_PEDALS+1];//0,1 - external pedals, 2 - onbpard pedal, 3 - onboard pedal alternate number
 	CtrlChangeNum tunerCc;
 
 	ButtonType buttonType[FOOT_BUTTONS_NUM];

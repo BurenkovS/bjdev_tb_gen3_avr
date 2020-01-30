@@ -15,16 +15,14 @@
 #include "settings.h"
 #include <avr/pgmspace.h>
 
-#define MAX_PEDALS 3
-
-const ioPort padalsArray[MAX_PEDALS] PROGMEM = {
+const ioPort padalsArray[MAX_PHY_PEDALS] PROGMEM = {
 	{ &EXP_P1_PORT, EXP_P1_PIN },
 	{ &EXP_P2_PORT, EXP_P2_PIN },
 	{ &EXP_P_OB_PORT, EXP_P_OB_PIN }};
 
 
-static const uint8_t adcChanArray[MAX_PEDALS] = {EXP_P1_ADC_CHAN, EXP_P2_ADC_CHAN, EXP_P_ONBPAR_ADC_CHAN};
-static uint8_t pedalsPrevValue[MAX_PEDALS] = {0, 0, 0};
+static const uint8_t adcChanArray[MAX_PHY_PEDALS] = {EXP_P1_ADC_CHAN, EXP_P2_ADC_CHAN, EXP_P_ONBPAR_ADC_CHAN};
+static uint8_t pedalsPrevValue[MAX_PHY_PEDALS] = {0, 0, 0};
 	
 void initExpression()
 {
@@ -33,7 +31,7 @@ void initExpression()
 	
 	initAdc();
 	
-	for(i = 0; i < MAX_PEDALS; ++i)
+	for(i = 0; i < MAX_PHY_PEDALS; ++i)
 	{	
 		tmpPort.pin_ = pgm_read_byte(&(padalsArray[i].pin_));
 		tmpPort.portReg_ = (volatile uint8_t*)pgm_read_word(&(padalsArray[i].portReg_));
@@ -70,7 +68,7 @@ void expProcess()
 	uint8_t i;
 	uint8_t position;
 		
-	for(i = 0 ; i < MAX_PEDALS; ++i)
+	for(i = 0 ; i < MAX_PHY_PEDALS; ++i)
 	{
 		position = expGetPedalPosition(i);
 		if(position != pedalsPrevValue[i])

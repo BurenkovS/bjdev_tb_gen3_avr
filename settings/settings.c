@@ -56,7 +56,7 @@ void setDefaultGlobalSettings()
 	global.pedalBrightness = 5;
 	
 	uint8_t i = 0;
-	for(i = 0; i < 3; ++i)
+	for(i = 0; i < MAX_PHY_PEDALS-1; ++i)
 	{
 		global.pLowPos[i] = 0;
 		global.pHighPos[i] = 127;

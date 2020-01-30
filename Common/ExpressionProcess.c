@@ -84,8 +84,8 @@ void singlePedalProcess(uint8_t pedalNum)
 	if(valToSend != prevPedalsPositionInRange[pedalNum])
 	{
 		//LOG(SEV_TRACE,"%s", __FUNCTION__, pedalNum);
-		if(pedalNum == TOTAL_EXPRESSIONS_PEDALS-1)
-			pedalCc = (runtimeEnvironment.currentIaState_[FOOT_BUTTONS_NUM-1] == IA_STATE_OFF || bank.pedalsCc[TOTAL_EXPRESSIONS_PEDALS] == 128) ? bank.pedalsCc[pedalNum] : bank.pedalsCc[pedalNum+1];
+		if(pedalNum == ONBOARD_PEDAL)
+			pedalCc = (runtimeEnvironment.currentIaState_[FOOT_BUTTONS_NUM-1] == IA_STATE_OFF || bank.pedalsCc[ONBOARD_PEDAL_ALT] == 128) ? bank.pedalsCc[ONBOARD_PEDAL] : bank.pedalsCc[ONBOARD_PEDAL_ALT];
 		else
 			pedalCc = bank.pedalsCc[pedalNum]; 
 		
