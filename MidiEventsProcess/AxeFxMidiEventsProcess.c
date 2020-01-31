@@ -259,57 +259,64 @@ void handleMidiEventAxeFx(uint8_t in_MessType
     uint8_t* sys_ex_data = midiMessage + 1;//just remove status byte 
     if (in_MessType == MIDI_SYSEX_START && global.targetDevice != TARGET_DEVICE_OFF && isAxefxMessage(sys_ex_data))//if SysEx is enabled
     {
-        if (runtimeEnvironment.isAxeFxConnected_ == 0 && global.targetDevice == TARGET_DEVICE_AUTO)//If axe not connected  and auto detection enabled 
-        {
-            if(parceAxefxModelFromSysex(sys_ex_data, &runtimeEnvironment.currentAxeFxModel_))
-            {
-                runtimeEnvironment.isAxeFxConnected_ = true;
-                LCDClear();
-                switch ((uint8_t)runtimeEnvironment.currentAxeFxModel_)
-                {
-                    case AXEFX_MODEL_CODE:
-						LCDWriteString("AxeFX Standard");
-                        break;
+        if (runtimeEnvironment.isAxeFxConnected_ == 0)//If axe not connected 
+		{
+			if(global.targetDevice == TARGET_DEVICE_AUTO)//If auto detection enabled parse model from sysex
+			{
+				if(parceAxefxModelFromSysex(sys_ex_data, &runtimeEnvironment.currentAxeFxModel_))
+				{
+					runtimeEnvironment.isAxeFxConnected_ = true;
+					LCDClear();
+					switch ((uint8_t)runtimeEnvironment.currentAxeFxModel_)
+					{
+						case AXEFX_MODEL_CODE:
+							LCDWriteString("AxeFX Standard");
+							break;
                                 
-                    case AXEFX_ULTRA_MODEL_CODE:
-                        LCDWriteString("AxeFX Ultra");
-                        break; 
+						case AXEFX_ULTRA_MODEL_CODE:
+							LCDWriteString("AxeFX Ultra");
+							break; 
                                 
-                    case AXEFX_2_MODEL_CODE:
-                        LCDWriteString("AxeFX II");
-                        break;
+						case AXEFX_2_MODEL_CODE:
+							LCDWriteString("AxeFX II");
+							break;
                                 
-                    case AXEFX_2_XL_MODEL_CODE:
-                        LCDWriteString("AxeFX II XL");
-                        break;
+						case AXEFX_2_XL_MODEL_CODE:
+							LCDWriteString("AxeFX II XL");
+							break;
                             
-                    case AXEFX_2_XL_PLUS_MODEL_CODE:
-                        LCDWriteString("AxeFX II XL+");
-                        break;
+						case AXEFX_2_XL_PLUS_MODEL_CODE:
+							LCDWriteString("AxeFX II XL+");
+							break;
                             
-                    case AX8_MODEL_CODE:
-                        LCDWriteString("AX8");  
-                        break;
+						case AX8_MODEL_CODE:
+							LCDWriteString("AX8");  
+							break;
                                     
-                    default: break;
-                }
-				setTaskMessageOff();
+						default: break;
+					}
+					setTaskMessageOff();
 
-                /* 
-                 * Send request for IA states.
-                 * After controller receive answer from AxeFx,
-                 * it will send preset name request.
-                 * So in this case preset will shown on screen after power ON(if axe fx is active)
-                 */
-                requestAxefxInfo(IA_STATE_FUNCTION_ID);
-            }
-        }
+					/* 
+					 * Send request for IA states.
+					 * After controller receive answer from AxeFx,
+					 * it will send preset name request.
+					 * So in this case preset will shown on screen after power ON(if axe fx is active)
+					 */
+					requestAxefxInfo(IA_STATE_FUNCTION_ID);
+				}
+			}
+			else if(isAxefxInTargetSettings(&runtimeEnvironment.currentAxeFxModel_))//else if model defined in settings, fill variables from settings
+			{
+				runtimeEnvironment.isAxeFxConnected_ = true;
+				requestAxefxInfo(IA_STATE_FUNCTION_ID);	
+			}
+		}
         //If AxeFx connected
         else
         {
             if (parseAxefxTuner(sys_ex_data, &runtimeEnvironment.tunerNote_, &runtimeEnvironment.tunerTune_))
             {
-				//LCDWriteStringXY(0,0,"parseAxefxTuner");  
 				drawPedalTuner(runtimeEnvironment.tunerTune_);
                 if(runtimeEnvironment.isTimeToShowTuner_ == true)
 				{

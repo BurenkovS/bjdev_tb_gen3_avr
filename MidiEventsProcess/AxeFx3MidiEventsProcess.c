@@ -103,13 +103,20 @@ void handleMidiEventAxeFx3(uint8_t in_MessType
     uint8_t* sys_ex_data = midiMessage + 1;//just remove status byte
     if (in_MessType == MIDI_SYSEX_START && global.targetDevice != TARGET_DEVICE_OFF && isAxefx3Message(sys_ex_data))//if SysEx is enabled
     {
-	    if (runtimeEnvironment.isAxeFx3Connected_ == 0 && global.targetDevice == TARGET_DEVICE_AUTO)//If axe not connected  and auto detection enabled
-	    {
-            runtimeEnvironment.isAxeFx3Connected_ = true;
-            LCDClear();
-		    LCDWriteString("AxeFX III");
-			setTaskMessageOff();
-	    }
+	    if (runtimeEnvironment.isAxeFx3Connected_ == 0)//If axe not connected  
+		{
+			if(global.targetDevice == TARGET_DEVICE_AUTO)//If auto detection enabled, fill all data from sysex
+			{
+				runtimeEnvironment.isAxeFx3Connected_ = true;
+				LCDClear();
+				LCDWriteString("AxeFX III");
+				setTaskMessageOff();
+			}
+			else if(global.targetDevice == TARGET_DEVICE_AXEIII)//if device specified in settings, fill from settings
+			{
+				runtimeEnvironment.isAxeFx3Connected_ = true;
+			}
+		}
 	    //If AxeFx3 connected
 	    else
 	    {

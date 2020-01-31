@@ -74,6 +74,7 @@ int main(void)
 	//Set default preset name to show. This string will replace by first valid sysex message with name
 	strcpy((char*)&(runtimeEnvironment.vendorPresetName_), ("No preset name"));
 	
+
 	//update LEDs after start sequence 
 	updateRequests.updateLedsRq_ = 1;
 	updateRequests.updatePedalLedsRq_ = 1;
