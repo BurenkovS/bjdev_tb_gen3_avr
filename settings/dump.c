@@ -56,11 +56,12 @@ TRACE FUNCTIONS CODE in bits, send as bytes chain in ack message
 [0] function ID
 */
 /* trace length buffer */
-#define TRACE_LENGTH					(40) /* ACK full msg length = 8*/
+#define TRACE_LENGTH					(90) /* ACK full msg length = 8*/
 /* functions IDs */
 #define handleMidiSysExSettings_ID		(1)
 #define load_GS_param_ID				(2)
 #define load_BS_param_ID				(3)
+#define load_BS_context_ID				(0)
 /* ErrNo for handleMidiSysExSettings */
 #define HMS_BAD_FIRST_CHECK				(1)
 #define HMS_NO_MIDI_SYSEX_START			(2)
@@ -92,6 +93,22 @@ TRACE FUNCTIONS CODE in bits, send as bytes chain in ack message
 #define LBS_COUNTER_OVERRUN				(8)
 #define LBS_BAD_GDL_BS					(9)
 #define LBS_NO_DECODE_BYTE				(8)
+/* ErrNo for load_BS_context */
+#define LCX_BAD_PDATA					(1)
+#define LCX_BAD_PGLOBALS				(2)
+#define LCX_BAD_LEN						(3)
+#define LCX_BAD_BANKS_MSG				(4)
+#define LCX_BAD_BANK_NUM1				(5)
+#define LCX_BAD_BANK_NUM2				(6)
+#define LCX_BAD_BTN_NUM1				(7)
+#define LCX_BAD_BTN_NUM2				(8)
+#define LCX_BAD_CTX_ID					(9)
+#define LCX_COUNTER_OVERRUN				(10)
+#define LCX_BAD_GDL_BTN					(11)
+#define LCX_BAD_GDL_CTX					(12)
+#define LCX_NO_DECODE_BYTE				(13)
+
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///
@@ -267,23 +284,22 @@ bool load_GS_param( const uint8_t paramID, uint8_t * pData, uint16_t length, con
 		DATA
 	} State_t;
 
-	if (!(trace != NULL )) return (false);
 	uint8_t tcode = load_GS_param_ID; // trace code
 
 	if ( NULL == pData ){
 		tcode = tcode | ( LGS_BAD_PDATA << 3 );
-		*trace= tcode;
+		if (trace != NULL) *trace= tcode;
 		return(false);
 	}
 	if ( NULL == pGlobals){
 		tcode = tcode | ( LGS_BAD_PGLOBALS << 3 );
-		*trace= tcode;
+		if (trace != NULL) *trace= tcode;
 		return(false);
 	}
 
 	if (4 > length){
 		tcode = tcode | ( LGS_BAD_LEN << 3 );
-		*trace= tcode;
+		if (trace != NULL) *trace= tcode;
 		return (false);
 	}
 
@@ -293,7 +309,7 @@ bool load_GS_param( const uint8_t paramID, uint8_t * pData, uint16_t length, con
 
 	if (false==getDataAndLenghtGS( paramID, &DataLen, &DataOffset )){
 		tcode = tcode | ( LGS_BAD_GDL_GS << 3 );
-		*trace= tcode;
+		if (trace != NULL) *trace= tcode;
 		return(false);
 	}
 
@@ -306,7 +322,7 @@ bool load_GS_param( const uint8_t paramID, uint8_t * pData, uint16_t length, con
 			case GLOB_SETS:
 				if ( GLOBALS_MSG != pData[counter] ){
 					tcode = tcode | ( LGS_BAD_GLOBALS_MSG << 3 );
-					*trace= tcode;
+					if (trace != NULL) *trace= tcode;
 					return (false);
 				}
 				state = GS_ID;
@@ -314,7 +330,7 @@ bool load_GS_param( const uint8_t paramID, uint8_t * pData, uint16_t length, con
 			case GS_ID:
 				if ( paramID != pData[counter] ){
 					tcode = tcode | ( LGS_BAD_PARAMS_ID << 3 );
-					*trace= tcode;
+					if (trace != NULL) *trace= tcode;
 					return (false);
 				}
 				state = DATA;
@@ -327,7 +343,7 @@ bool load_GS_param( const uint8_t paramID, uint8_t * pData, uint16_t length, con
 		counter++;
 		if ( counter >= length ){
 			tcode = tcode | ( LGS_COUNTER_OVERRUN << 3 );
-			*trace= tcode;
+			if (trace != NULL) *trace= tcode;
 			return (false);
 		}
 	}
@@ -337,7 +353,7 @@ bool load_GS_param( const uint8_t paramID, uint8_t * pData, uint16_t length, con
 		uint8_t byte = 0;
 		if (!decodeByte( &pData[counter], &byte )){
 			tcode = tcode | ( LGS_NO_DECODE_BYTE << 3 );
-			*trace= tcode;
+			if (trace != NULL) *trace= tcode;
 			return(false);
 		}
 		*((uint8_t*)pGlobals + DataOffset + i) = byte;
@@ -349,7 +365,7 @@ bool load_GS_param( const uint8_t paramID, uint8_t * pData, uint16_t length, con
 
 	//LOG(SEV_TRACE, "%s tapDisplayType=%d", __FUNCTION__, tapDisplayType );
 	tcode = tcode | ( 1 << 2 );
-	*trace= tcode;
+	if (trace != NULL) *trace= tcode;
 	return (true);
 }
 
@@ -366,11 +382,21 @@ bool load_GS_param( const uint8_t paramID, uint8_t * pData, uint16_t length, con
 соответствуют номеру контекста кнопки для данного банка
 */
 
-#define BS_ID_tapCC					123
-#define BS_ID_pedalsCC				124
-#define BS_ID_tunerCC				125
-#define BS_ID_buttonType			126
-#define BS_ID_bankName				127
+// для контекста
+#define BS_ID_CTX_relays				20
+#define BS_ID_CTX_presetChangeContext	21
+#define BS_ID_CTX_commonContext			22
+#define BS_ID_CTX_bankNumber			23
+#define BS_ID_CTX_nameAlias				24
+
+// общие
+#define BS_ID_selectBankAction			121
+#define BS_ID_selectBankActionProgNum	122
+#define BS_ID_tapCC						123
+#define BS_ID_pedalsCC					124
+#define BS_ID_tunerCC					125
+#define BS_ID_buttonType				126
+#define BS_ID_bankName					127
 
 bool getDataAndLenghtBS(uint8_t paramID, uint16_t* pDataLen, uint32_t* pDataOffset ){
 	if ( paramID < FOOT_BUTTONS_NUM ){
@@ -380,6 +406,34 @@ bool getDataAndLenghtBS(uint8_t paramID, uint16_t* pDataLen, uint32_t* pDataOffs
 		return(true);
 	}
 	switch ( paramID ){
+		case BS_ID_CTX_relays:
+			*pDataLen		= member_size(ButtonContext, relays);
+			*pDataOffset	= offsetof(ButtonContext, relays);
+			break;
+		case BS_ID_CTX_presetChangeContext:
+			*pDataLen		= member_size(ButtonContext, presetChangeContext);
+			*pDataOffset	= offsetof(ButtonContext, presetChangeContext);
+			break;
+		case BS_ID_CTX_commonContext:
+			*pDataLen		= member_size(ButtonContext, commonContext);
+			*pDataOffset	= offsetof(ButtonContext, commonContext);
+			break;
+		case BS_ID_CTX_bankNumber:
+			*pDataLen		= member_size(ButtonContext, bankNumber);
+			*pDataOffset	= offsetof(ButtonContext, bankNumber);
+			break;
+		case BS_ID_CTX_nameAlias:
+			*pDataLen		= member_size(ButtonContext, nameAlias);
+			*pDataOffset	= offsetof(ButtonContext, nameAlias);
+			break;
+		case BS_ID_selectBankAction:
+			*pDataLen		= member_size(BankSettings, selectBankAction);
+			*pDataOffset	= offsetof(BankSettings, selectBankAction);
+			break;
+		case BS_ID_selectBankActionProgNum:
+			*pDataLen		= member_size(BankSettings, selectBankActionProgNum);
+			*pDataOffset	= offsetof(BankSettings, selectBankActionProgNum);
+			break;
 		case BS_ID_tapCC:
 			*pDataLen		= member_size(BankSettings, tapCc);
 			*pDataOffset	= offsetof(BankSettings, tapCc);
@@ -404,6 +458,55 @@ bool getDataAndLenghtBS(uint8_t paramID, uint16_t* pDataLen, uint32_t* pDataOffs
 			return(false);
 	}
 	return(true);
+}
+
+
+static inline
+void save_BS_Context( const uint8_t paramCtxID, const uint8_t btnNumber, const uint8_t bankNumber, const BankSettings * pBank ){
+	if ( NULL == pBank ) return;
+	if ( 127 < bankNumber ) return;
+
+	/*  № по порядку
+	0 - номер устройства в сети
+	1 - код модели устройства от производителя
+	2 - признак настройки банка = 1
+	3 - номер банка bankNumber
+	4 - button Number
+	5 - param Context ID
+	... data
+	*/
+
+	uint16_t	midiMsgLen		= 6;	//midi msg length, init value = header size
+	uint16_t	DataLen			= 0;	//input data length in bytes
+	uint32_t	DataOffset		= 0;	//data address offset
+	uint16_t	DataLenCtx		= 0;	//input data length in bytes
+	uint32_t	DataOffsetCtx	= 0;	//data address offset
+
+	if (false==getDataAndLenghtBS( paramCtxID,	&DataLenCtx, &DataOffsetCtx )) return;
+	if (false==getDataAndLenghtBS( btnNumber,	&DataLen, &DataOffset )) return;
+
+	DataOffsetCtx+=DataOffset;
+	midiMsgLen += DataLenCtx * 2;
+
+	uint8_t midiMsg[midiMsgLen];
+	memset(midiMsg, 0, (size_t)midiMsgLen);
+
+	uint16_t offset = 0;
+
+	midiMsg[offset++] = NETWORK_NUMBER;
+	midiMsg[offset++] = MODEL_NUMBER;
+	midiMsg[offset++] = BANKS_MSG;
+	midiMsg[offset++] = bankNumber;
+	midiMsg[offset++] = btnNumber;
+	midiMsg[offset++] = paramCtxID;
+
+	for( uint16_t i=0; i < DataLenCtx; i++ ){
+		uint8_t byte = *((uint8_t*)pBank + DataOffsetCtx + i);
+		if (false == encodeByte( byte, &midiMsg[offset] )) return;
+		offset+=2;
+	}
+
+	midiSendSysExManfId( (uint32_t)MANUFACTURER_ID, midiMsgLen, midiMsg );
 }
 
 static inline
@@ -449,6 +552,155 @@ void save_BS_param( const uint8_t paramID,  const uint8_t bankNumber, const Bank
 }
 
 static inline
+bool load_BS_context( const uint8_t paramCtxID, const uint8_t btnNumber, uint8_t * pData, uint16_t length, GlobalSettings * pGlobals, uint8_t * trace ){
+	/*  № по порядку
+	0 - номер устройства в сети
+	1 - код модели устройства от производителя
+	2 - признак настройки банка = 1
+	3 - номер банка bankNumber
+	4 - button Number
+	5 - param Context ID
+	... data
+	*/
+
+	typedef enum {
+		BANK_SETS = 0,
+		BANK_NUMBER,
+		BTN_NUMBER,
+		CTX_ID,
+		DATA
+	} State_t;
+
+	uint8_t tcode = load_BS_context_ID; // trace code
+
+	if ( NULL == pData ){
+		tcode = tcode | (LCX_BAD_PDATA<<3);
+		if (NULL!=trace) *trace= tcode;
+		return(false);
+	}
+	if ( NULL == pGlobals){
+		tcode = tcode | (LCX_BAD_PGLOBALS<<3);
+		if (NULL!=trace) *trace= tcode;
+		return(false);
+	}
+	if (6 > length){
+		tcode = tcode | (LCX_BAD_LEN<<3);
+		if (NULL!=trace) *trace= tcode;
+		return (false);
+	}
+
+	uint16_t		counter		= 0;
+	State_t			state		= BANK_SETS;
+	bool			_do_		= true;
+	uint8_t			bankNumber	= 0;
+
+	while(1) {
+		switch( state ){
+			case BANK_SETS:
+				if ( BANKS_MSG != pData[counter] ){
+					tcode = tcode | (LCX_BAD_BANKS_MSG<<3);
+					if (NULL!=trace) *trace= tcode;
+					return (false);
+				}
+				state = BANK_NUMBER;
+				break;
+			case BANK_NUMBER:
+				if ( 0x7F <  pData[counter] ){
+					tcode = tcode | (LCX_BAD_BANK_NUM1<<3);
+					if (NULL!=trace) *trace= tcode;
+					return (false);
+				}
+				state = BTN_NUMBER;
+				bankNumber = pData[counter];
+/*
+				if ( bankNumber > pGlobals->maxBankNumber ){
+					tcode = tcode | (LCX_BAD_BANK_NUM2<<3);
+					*trace= tcode;
+					return (false);
+				}
+*/
+				break;
+			case BTN_NUMBER:
+				if ( !(FOOT_BUTTONS_NUM > pData[counter]) ){
+					tcode = tcode | (LCX_BAD_BTN_NUM1<<3);
+					if (NULL!=trace) *trace= tcode;
+					return (false);
+				}
+				if ( btnNumber != pData[counter] ){
+					tcode = tcode | (LCX_BAD_BTN_NUM2<<3);
+					if (NULL!=trace) *trace= tcode;
+					return (false);
+				}
+				state = CTX_ID;
+				break;
+			case CTX_ID:
+				if ( paramCtxID!=pData[counter] ) {
+					tcode = tcode | (LCX_BAD_CTX_ID<<3);
+					if (NULL!=trace) *trace= tcode;
+					return(false);
+				}
+				state = DATA;
+				break;
+			case DATA:
+				_do_ = false;
+				break;
+		}
+		if ( false == _do_ ) break;
+		counter++;
+		if ( counter >= length ){
+			tcode = tcode | (LCX_COUNTER_OVERRUN<<3);
+			if (NULL!=trace) *trace= tcode;
+			return (false);
+		}
+	}
+
+	// берем адрес данных
+	uint16_t	DataLen			= 0;	//data length in bytes
+	uint32_t	DataOffset		= 0;	//data address offset
+	uint16_t	DataLenCtx		= 0;	//input data length in bytes
+	uint32_t	DataOffsetCtx	= 0;	//data address offset
+
+	// button context
+	if (false==getDataAndLenghtBS( btnNumber, &DataLen, &DataOffset )){
+		tcode = tcode | (LCX_BAD_GDL_BTN<<3);
+		if (NULL!=trace) *trace= tcode;
+		return(false);
+	}
+	// context member
+	if (false==getDataAndLenghtBS( paramCtxID,	&DataLenCtx, &DataOffsetCtx )){
+		tcode = tcode | (LCX_BAD_GDL_CTX<<3);
+		if (NULL!=trace) *trace= tcode;
+		return(false);
+	}
+
+	uint8_t buffer[DataLenCtx];
+	memset( buffer, 0, (size_t)DataLenCtx);
+
+	// декодирование
+	for ( uint16_t i=0; i<DataLenCtx; i++ ){
+		uint8_t byte = 0;
+		if (!decodeByte( &pData[counter], &byte )){
+			tcode = tcode | (LCX_NO_DECODE_BYTE<<3);
+			if (NULL!=trace) *trace= tcode;
+			return(false);
+		}
+		buffer[i] = byte;
+		counter+=2;
+	}
+
+	if( bankNumber == runtimeEnvironment.activeBankNumber_ ){
+		memcpy( (uint8_t*)((uint8_t*)(&bank) + DataOffset + DataOffsetCtx), buffer,  DataLenCtx );
+	}
+
+	WriteEEPROM(buffer,	BankSettings_ADDR(bankNumber) + DataOffset  + DataOffsetCtx, DataLenCtx);
+
+	tcode = tcode | (1<<2);
+	if (NULL!=trace) *trace= tcode;
+	return (true);
+}
+
+
+static inline
 bool load_BS_param( const uint8_t paramID, uint8_t * pData, uint16_t length, GlobalSettings * pGlobals, uint8_t * trace  ){
 	typedef enum {
 		BANK_SETS = 0,
@@ -457,22 +709,21 @@ bool load_BS_param( const uint8_t paramID, uint8_t * pData, uint16_t length, Glo
 		DATA
 	} State_t;
 
-	if ( NULL == trace )	return(false);
 	uint8_t tcode = load_BS_param_ID; // trace code
 
 	if ( NULL == pData ){
 		tcode = tcode | (LBS_BAD_PDATA<<3);
-		*trace= tcode;
+		if (NULL!=trace) *trace= tcode;
 		return(false);
 	}
 	if ( NULL == pGlobals){
 		tcode = tcode | (LBS_BAD_PGLOBALS<<3);
-		*trace= tcode;
+		if (NULL!=trace) *trace= tcode;
 		return(false);
 	}
 	if (5 > length){
 		tcode = tcode | (LBS_BAD_LEN<<3);
-		*trace= tcode;
+		if (NULL!=trace) *trace= tcode;
 		return (false);
 	}
 
@@ -486,7 +737,7 @@ bool load_BS_param( const uint8_t paramID, uint8_t * pData, uint16_t length, Glo
 			case BANK_SETS:
 				if ( BANKS_MSG != pData[counter] ){
 					tcode = tcode | (LBS_BAD_BANKS_MSG<<3);
-					*trace= tcode;
+					if (NULL!=trace) *trace= tcode;
 					return (false);
 				}
 				state = BANK_NUMBER;
@@ -494,7 +745,7 @@ bool load_BS_param( const uint8_t paramID, uint8_t * pData, uint16_t length, Glo
 			case BANK_NUMBER:
 				if ( 0x7F < pData[counter] ){
 					tcode = tcode | (LBS_BAD_BANK_NUM1<<3);
-					*trace= tcode;
+					if (NULL!=trace) *trace= tcode;
 					return (false);
 				}
 				state = BS_ID;
@@ -510,7 +761,7 @@ bool load_BS_param( const uint8_t paramID, uint8_t * pData, uint16_t length, Glo
 			case BS_ID:
 				if ( paramID != pData[counter] ){
 					tcode = tcode | (LBS_BAD_PARAMS_ID<<3);
-					*trace= tcode;
+					if (NULL!=trace) *trace= tcode;
 					return (false);
 				}
 				state = DATA;
@@ -523,7 +774,7 @@ bool load_BS_param( const uint8_t paramID, uint8_t * pData, uint16_t length, Glo
 		counter++;
 		if ( counter >= length ){
 			tcode = tcode | (LBS_COUNTER_OVERRUN<<3);
-			*trace= tcode;
+			if (NULL!=trace) *trace= tcode;
 			return (false);
 		}
 	}
@@ -534,7 +785,7 @@ bool load_BS_param( const uint8_t paramID, uint8_t * pData, uint16_t length, Glo
 
 	if (false==getDataAndLenghtBS( paramID, &DataLen, &DataOffset )){
 		tcode = tcode | (LBS_BAD_GDL_BS<<3);
-		*trace= tcode;
+		if (NULL!=trace) *trace= tcode;
 		return(false);
 	}
 
@@ -546,7 +797,7 @@ bool load_BS_param( const uint8_t paramID, uint8_t * pData, uint16_t length, Glo
 		uint8_t byte = 0;
 		if (!decodeByte( &pData[counter], &byte )){
 			tcode = tcode | (LBS_NO_DECODE_BYTE<<3);
-			*trace= tcode;
+			if (NULL!=trace) *trace= tcode;
 			return(false);
 		}
 		buffer[i] = byte;
@@ -560,7 +811,7 @@ bool load_BS_param( const uint8_t paramID, uint8_t * pData, uint16_t length, Glo
 	WriteEEPROM(buffer,	BankSettings_ADDR(bankNumber) + DataOffset, DataLen);
 
 	tcode = tcode | (1<<2);
-	*trace= tcode;
+	if (NULL!=trace) *trace= tcode;
 	return (true);
 }
 
@@ -672,14 +923,24 @@ void save_All(){
 		BankSettings _bank;
 		ReadEEPROM((uint8_t*)&_bank, BankSettings_ADDR(i), sizeof(BankSettings));
 
-		// сохраняем контекс кнопки № 0 ... N
-		for(uint8_t btnNum=0; btnNum<FOOT_BUTTONS_NUM; btnNum++) save_BS_param( btnNum, i, &_bank );
+		save_BS_param( BS_ID_tapCC,						i, &_bank );
+		save_BS_param( BS_ID_pedalsCC,					i, &_bank );
+		save_BS_param( BS_ID_tunerCC,					i, &_bank );
+		save_BS_param( BS_ID_buttonType,				i, &_bank );
+		save_BS_param( BS_ID_bankName,					i, &_bank );
+		save_BS_param( BS_ID_selectBankAction,			i, &_bank );
+		save_BS_param( BS_ID_selectBankActionProgNum,	i, &_bank );
 
-		save_BS_param( BS_ID_tapCC,		i, &_bank );
-		save_BS_param( BS_ID_pedalsCC,	i, &_bank );
-		save_BS_param( BS_ID_tunerCC,	i, &_bank );
-		save_BS_param( BS_ID_buttonType,i, &_bank );
-		save_BS_param( BS_ID_bankName,	i, &_bank );
+		// сохраняем контекс кнопки № 0 ... N
+		//for(uint8_t btnNum=0; btnNum<FOOT_BUTTONS_NUM; btnNum++) save_BS_param( btnNum, i, &_bank );
+		for(uint8_t btnNum=0; btnNum<FOOT_BUTTONS_NUM; btnNum++){
+			save_BS_Context( BS_ID_CTX_relays,				btnNum, i, &_bank );
+			save_BS_Context( BS_ID_CTX_bankNumber,			btnNum, i, &_bank );
+			save_BS_Context( BS_ID_CTX_nameAlias,			btnNum, i, &_bank );
+			save_BS_Context( BS_ID_CTX_commonContext,		btnNum, i, &_bank );
+			save_BS_Context( BS_ID_CTX_presetChangeContext,	btnNum, i, &_bank );
+		}
+
 	}
 	send_EOT();
 }
@@ -691,7 +952,7 @@ void save_All(){
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 bool handleMidiSysExSettings( uint8_t midiMsgType, uint8_t * midiMsg, uint16_t midiMsgLength, uint16_t midiBuffLength, uint8_t * trace ){
-	LOG(SEV_TRACE,"%s", __FUNCTION__);
+	//LOG(SEV_TRACE,"%s", __FUNCTION__);
 	typedef enum {
 		START_SYSEX = 0,
 		MANUFACTURER_ID_0,
@@ -701,8 +962,6 @@ bool handleMidiSysExSettings( uint8_t midiMsgType, uint8_t * midiMsg, uint16_t m
 		MODEL_NUM,
 		PAYLOAD
 	} SysExState_t;
-
-	if (!(trace != NULL )) return (false);
 
 	uint8_t tcode = handleMidiSysExSettings_ID; // trace code
 
@@ -716,7 +975,7 @@ bool handleMidiSysExSettings( uint8_t midiMsgType, uint8_t * midiMsg, uint16_t m
 	( /*MIDI_SYSEX_END*/MIDI_SYSEX_START != midiMsgType )
 	){
 		tcode	= tcode | (HMS_BAD_FIRST_CHECK << 3);
-		*trace	= tcode;
+		if (NULL!=trace) *trace	= tcode;
 		return (false);
 	}
 
@@ -733,7 +992,7 @@ bool handleMidiSysExSettings( uint8_t midiMsgType, uint8_t * midiMsg, uint16_t m
 			case START_SYSEX:
 				if ( MIDI_SYSEX_START != midiMsg[counter] ){
 					tcode	= tcode | (HMS_NO_MIDI_SYSEX_START << 3);
-					*trace	= tcode;
+					if (NULL!=trace) *trace	= tcode;
 					return (false);
 				}
 				else
@@ -743,7 +1002,7 @@ bool handleMidiSysExSettings( uint8_t midiMsgType, uint8_t * midiMsg, uint16_t m
 				byte = (manfId >> 16) & 0x7F;
 				if ( byte != midiMsg[counter] ){
 					tcode	= tcode | (HMS_BAD_MANUFACTURER_ID_0 << 3);
-					*trace	= tcode;
+					if (NULL!=trace) *trace	= tcode;
 					return (false);
 				}
 				else
@@ -753,7 +1012,7 @@ bool handleMidiSysExSettings( uint8_t midiMsgType, uint8_t * midiMsg, uint16_t m
 				byte = (manfId >> 8) & 0x7F;
 				if ( byte != midiMsg[counter] ){
 					tcode	= tcode | (HMS_BAD_MANUFACTURER_ID_1 << 3);
-					*trace	= tcode;
+					if (NULL!=trace) *trace	= tcode;
 					return (false);
 				}
 				else
@@ -763,7 +1022,7 @@ bool handleMidiSysExSettings( uint8_t midiMsgType, uint8_t * midiMsg, uint16_t m
 				byte = manfId & 0x7F;
 				if ( byte != midiMsg[counter] ){
 					tcode	= tcode | (HMS_BAD_MANUFACTURER_ID_2 << 3);
-					*trace	= tcode;
+					if (NULL!=trace) *trace	= tcode;
 					return (false);
 				}
 				else
@@ -772,7 +1031,7 @@ bool handleMidiSysExSettings( uint8_t midiMsgType, uint8_t * midiMsg, uint16_t m
 			case NETWORK_NUM:
 				if ( NETWORK_NUMBER != midiMsg[counter] ){
 					tcode	= tcode | (HMS_BAD_NETWORK_NUMBER << 3);
-					*trace	= tcode;
+					if (NULL!=trace) *trace	= tcode;
 					return (false);
 				}
 				else
@@ -781,7 +1040,7 @@ bool handleMidiSysExSettings( uint8_t midiMsgType, uint8_t * midiMsg, uint16_t m
 			case MODEL_NUM:
 				if ( MODEL_NUMBER != midiMsg[counter] ){
 					tcode	= tcode | (HMS_BAD_MODEL_NUMBER << 3);
-					*trace	= tcode;
+					if (NULL!=trace) *trace	= tcode;
 					return (false);
 				}
 				else
@@ -800,197 +1059,200 @@ bool handleMidiSysExSettings( uint8_t midiMsgType, uint8_t * midiMsg, uint16_t m
 		counter++;
 		if ( counter >= midiMsgLength ) { 
 			tcode	= tcode | (HMS_COUNTER_OVERRUN << 3);
-			*trace	= tcode;
+			if (NULL!=trace) *trace	= tcode;
 			return(false); 
 		}
 	}
 
 	if (0 == lengthPayload){
 		tcode	= tcode | (HMS_NO_PAYLOAD << 3);
-		*trace	= tcode;
+		if (NULL!=trace) *trace	= tcode;
 		return(false);
 	}
 
 	// decode globals messages
 
-	//if ( GLOBALS_MSG == midiMsg[startPayloadPos] ){
-		if (load_GS_param( GS_ID_bnkNum,				&midiMsg[startPayloadPos], lengthPayload,  &global, trace + 1 )){
-			LOG(SEV_TRACE,"%s %s", __FUNCTION__, "GS_ID_bnkNum");
+	if ( GLOBALS_MSG == midiMsg[startPayloadPos] ){
+		if (load_GS_param( GS_ID_bnkNum,				&midiMsg[startPayloadPos], lengthPayload,  &global, (NULL!=trace)?(trace + 1):NULL )){
 			tcode	= tcode | ( 1 << 2 );
-			*trace	= tcode;
+			if (NULL!=trace) *trace	= tcode;
 			return (true);
 		}
-		if (load_GS_param( GS_ID_midiChanNum,			&midiMsg[startPayloadPos], lengthPayload,  &global, trace + 2 )){
-			LOG(SEV_TRACE,"%s %s", __FUNCTION__, "GS_ID_midiChanNum");
+		if (load_GS_param( GS_ID_midiChanNum,			&midiMsg[startPayloadPos], lengthPayload,  &global, (NULL!=trace)?(trace + 2):NULL )){
 			tcode	= tcode | ( 1 << 2 );
-			*trace	= tcode;
+			if (NULL!=trace) *trace	= tcode;
 			return (true);
 		}
-		if (load_GS_param( GS_ID_useBankSelectMess,		&midiMsg[startPayloadPos], lengthPayload,  &global, trace + 3 )){
-			LOG(SEV_TRACE,"%s %s", __FUNCTION__, "GS_ID_useBankSelectMess");
+		if (load_GS_param( GS_ID_useBankSelectMess,		&midiMsg[startPayloadPos], lengthPayload,  &global, (NULL!=trace)?(trace + 3):NULL )){
 			tcode	= tcode | ( 1 << 2 );
-			*trace	= tcode;
+			if (NULL!=trace) *trace	= tcode;
 			return (true);
 		}
-		if (load_GS_param( GS_ID_bankSelectMessType,	&midiMsg[startPayloadPos], lengthPayload,  &global, trace + 4 )){
-			LOG(SEV_TRACE,"%s %s", __FUNCTION__, "GS_ID_bankSelectMessType");
+		if (load_GS_param( GS_ID_bankSelectMessType,	&midiMsg[startPayloadPos], lengthPayload,  &global, (NULL!=trace)?(trace + 4):NULL )){
 			tcode	= tcode | ( 1 << 2 );
-			*trace	= tcode;
+			if (NULL!=trace) *trace	= tcode;
 			return (true);
 		}
-		if (load_GS_param( GS_ID_bnkSwOnBoard,			&midiMsg[startPayloadPos], lengthPayload,  &global, trace + 5 )){
-			LOG(SEV_TRACE,"%s %s", __FUNCTION__, "GS_ID_bnkSwOnBoard");
+		if (load_GS_param( GS_ID_bnkSwOnBoard,			&midiMsg[startPayloadPos], lengthPayload,  &global, (NULL!=trace)?(trace + 5):NULL )){
 			tcode	= tcode | ( 1 << 2 );
-			*trace	= tcode;
+			if (NULL!=trace) *trace	= tcode;
 			return (true);
 		}
-		if (load_GS_param( GS_ID_showPresetBank,		&midiMsg[startPayloadPos], lengthPayload,  &global, trace + 6 )){
-			LOG(SEV_TRACE,"%s %s", __FUNCTION__, "GS_ID_showPresetBank");
+		if (load_GS_param( GS_ID_showPresetBank,		&midiMsg[startPayloadPos], lengthPayload,  &global, (NULL!=trace)?(trace + 6):NULL )){
 			tcode	= tcode | ( 1 << 2 );
-			*trace	= tcode;
+			if (NULL!=trace) *trace	= tcode;
 			return (true);
 		}
-		if (load_GS_param( GS_ID_targetDevice,			&midiMsg[startPayloadPos], lengthPayload,  &global, trace + 7 )){
-			LOG(SEV_TRACE,"%s %s", __FUNCTION__, "GS_ID_targetDevice");
+		if (load_GS_param( GS_ID_targetDevice,			&midiMsg[startPayloadPos], lengthPayload,  &global, (NULL!=trace)?(trace + 7):NULL )){
 			tcode	= tcode | ( 1 << 2 );
-			*trace	= tcode;
+			if (NULL!=trace) *trace	= tcode;
 			return (true);
 		}
-		if (load_GS_param( GS_ID_usbBaudrate,			&midiMsg[startPayloadPos], lengthPayload,  &global, trace + 8 )){
-			LOG(SEV_TRACE,"%s %s", __FUNCTION__, "GS_ID_usbBaudrate");
+		if (load_GS_param( GS_ID_usbBaudrate,			&midiMsg[startPayloadPos], lengthPayload,  &global, (NULL!=trace)?(trace + 8):NULL )){
 			tcode	= tcode | ( 1 << 2 );
-			*trace	= tcode;
+			if (NULL!=trace) *trace	= tcode;
 			return (true);
 		}
-		if (load_GS_param( GS_ID_inputThrough,			&midiMsg[startPayloadPos], lengthPayload,  &global, trace + 9 )){
-			LOG(SEV_TRACE,"%s %s", __FUNCTION__, "GS_ID_inputThrough");
+		if (load_GS_param( GS_ID_inputThrough,			&midiMsg[startPayloadPos], lengthPayload,  &global, (NULL!=trace)?(trace + 9):NULL )){
 			tcode	= tcode | ( 1 << 2 );
-			*trace	= tcode;
+			if (NULL!=trace) *trace	= tcode;
 			return (true);
 		}
-		if (load_GS_param( GS_ID_maxBankNumber,			&midiMsg[startPayloadPos], lengthPayload,  &global, trace + 10 )){
-			LOG(SEV_TRACE,"%s %s", __FUNCTION__, "GS_ID_maxBankNumber");
+		if (load_GS_param( GS_ID_maxBankNumber,			&midiMsg[startPayloadPos], lengthPayload,  &global, (NULL!=trace)?(trace + 10):NULL )){
 			tcode	= tcode | ( 1 << 2 );
-			*trace	= tcode;
+			if (NULL!=trace) *trace	= tcode;
 			return (true);
 		}
-		if (load_GS_param( GS_ID_screenBrightness,		&midiMsg[startPayloadPos], lengthPayload,  &global, trace + 11 )){
-			LOG(SEV_TRACE,"%s %s", __FUNCTION__, "GS_ID_screenBrightness");
+		if (load_GS_param( GS_ID_screenBrightness,		&midiMsg[startPayloadPos], lengthPayload,  &global, (NULL!=trace)?(trace + 11):NULL )){
 			tcode	= tcode | ( 1 << 2 );
-			*trace	= tcode;
+			if (NULL!=trace) *trace	= tcode;
 			return (true);
 		}
-		if (load_GS_param( GS_ID_screenContrast,		&midiMsg[startPayloadPos], lengthPayload,  &global, trace + 12 )){
-			LOG(SEV_TRACE,"%s %s", __FUNCTION__, "GS_ID_screenContrast");
+		if (load_GS_param( GS_ID_screenContrast,		&midiMsg[startPayloadPos], lengthPayload,  &global, (NULL!=trace)?(trace + 12):NULL )){
 			tcode	= tcode | ( 1 << 2 );
-			*trace	= tcode;
+			if (NULL!=trace) *trace	= tcode;
 			return (true);
 		}
-		if (load_GS_param( GS_ID_expPedalType,			&midiMsg[startPayloadPos], lengthPayload,  &global, trace + 13 )){
-			LOG(SEV_TRACE,"%s %s", __FUNCTION__, "GS_ID_expPedalType");
+		if (load_GS_param( GS_ID_expPedalType,			&midiMsg[startPayloadPos], lengthPayload,  &global, (NULL!=trace)?(trace + 13):NULL )){
 			tcode	= tcode | ( 1 << 2 );
-			*trace	= tcode;
+			if (NULL!=trace) *trace	= tcode;
 			return (true);
 		}
-		if (load_GS_param( GS_ID_buttonHoldTime,		&midiMsg[startPayloadPos], lengthPayload,  &global, trace + 14 )){
-			LOG(SEV_TRACE,"%s %s", __FUNCTION__, "GS_ID_buttonHoldTime");
+		if (load_GS_param( GS_ID_buttonHoldTime,		&midiMsg[startPayloadPos], lengthPayload,  &global, (NULL!=trace)?(trace + 14):NULL )){
 			tcode	= tcode | ( 1 << 2 );
-			*trace	= tcode;
+			if (NULL!=trace) *trace	= tcode;
 			return (true);
 		}
-		if (load_GS_param( GS_ID_tapDisplayType,		&midiMsg[startPayloadPos], lengthPayload,  &global, trace + 15 )){
-			LOG(SEV_TRACE,"%s %s", __FUNCTION__, "GS_ID_tapDisplayType");
+		if (load_GS_param( GS_ID_tapDisplayType,		&midiMsg[startPayloadPos], lengthPayload,  &global, (NULL!=trace)?(trace + 15):NULL )){
 			tcode	= tcode | ( 1 << 2 );
-			*trace	= tcode;
+			if (NULL!=trace) *trace	= tcode;
 			return (true);
 		}
-		if (load_GS_param( GS_ID_tapType,				&midiMsg[startPayloadPos], lengthPayload,  &global, trace + 16 )){
-			LOG(SEV_TRACE,"%s %s", __FUNCTION__, "GS_ID_tapType");
+		if (load_GS_param( GS_ID_tapType,				&midiMsg[startPayloadPos], lengthPayload,  &global, (NULL!=trace)?(trace + 16):NULL )){
 			tcode	= tcode | ( 1 << 2 );
-			*trace	= tcode;
+			if (NULL!=trace) *trace	= tcode;
 			return (true);
 		}
-		if (load_GS_param( GS_ID_pedalLedView,			&midiMsg[startPayloadPos], lengthPayload,  &global, trace + 17 )){
-			LOG(SEV_TRACE,"%s %s", __FUNCTION__, "GS_ID_pedalLedView");
+		if (load_GS_param( GS_ID_pedalLedView,			&midiMsg[startPayloadPos], lengthPayload,  &global, (NULL!=trace)?(trace + 17):NULL )){
 			tcode	= tcode | ( 1 << 2 );
-			*trace	= tcode;
+			if (NULL!=trace) *trace	= tcode;
 			return (true);
 		}
-		if (load_GS_param( GS_ID_pedalTunerScheme,		&midiMsg[startPayloadPos], lengthPayload,  &global, trace + 18 )){
-			LOG(SEV_TRACE,"%s %s", __FUNCTION__, "GS_ID_pedalTunerScheme");
+		if (load_GS_param( GS_ID_pedalTunerScheme,		&midiMsg[startPayloadPos], lengthPayload,  &global, (NULL!=trace)?(trace + 18):NULL )){
 			tcode	= tcode | ( 1 << 2 );
-			*trace	= tcode;
+			if (NULL!=trace) *trace	= tcode;
 			return (true);
 		}
-		if (load_GS_param( GS_ID_pedalBrightness,		&midiMsg[startPayloadPos], lengthPayload,  &global, trace + 19 )){
-			LOG(SEV_TRACE,"%s %s", __FUNCTION__, "GS_ID_pedalBrightness");
+		if (load_GS_param( GS_ID_pedalBrightness,		&midiMsg[startPayloadPos], lengthPayload,  &global, (NULL!=trace)?(trace + 19):NULL )){
 			tcode	= tcode | ( 1 << 2 );
-			*trace	= tcode;
+			if (NULL!=trace) *trace	= tcode;
 			return (true);
 		}
-		if (load_GS_param( GS_ID_pedalsCalibrationLo,	&midiMsg[startPayloadPos], lengthPayload,  &global, trace + 20 )){
-			LOG(SEV_TRACE,"%s %s", __FUNCTION__, "GS_ID_pedalsCalibrationLo");
+		if (load_GS_param( GS_ID_pedalsCalibrationLo,	&midiMsg[startPayloadPos], lengthPayload,  &global, (NULL!=trace)?(trace + 20):NULL )){
 			tcode	= tcode | ( 1 << 2 );
-			*trace	= tcode;
+			if (NULL!=trace) *trace	= tcode;
 			return (true);
 		}
-		if (load_GS_param( GS_ID_pedalsCalibrationHi,	&midiMsg[startPayloadPos], lengthPayload,  &global, trace + 21 )){
-			LOG(SEV_TRACE,"%s %s", __FUNCTION__, "GS_ID_pedalsCalibrationHi");
+		if (load_GS_param( GS_ID_pedalsCalibrationHi,	&midiMsg[startPayloadPos], lengthPayload,  &global, (NULL!=trace)?(trace + 21):NULL )){
 			tcode	= tcode | ( 1 << 2 );
-			*trace	= tcode;
+			if (NULL!=trace) *trace	= tcode;
 			return (true);
 		}
-	//}
+	}
 
 	// decode banks messages
-	//if ( BANKS_MSG == midiMsg[startPayloadPos] ){
+	if ( BANKS_MSG == midiMsg[startPayloadPos] ){
+		if (load_BS_param( BS_ID_tapCC,			&midiMsg[startPayloadPos], lengthPayload, &global, (NULL!=trace)?(trace + 22):NULL )){
+			tcode	= tcode | ( 1 << 2 );
+			if (NULL!=trace) *trace	= tcode;
+			return (true);
+		}
+		if (load_BS_param( BS_ID_pedalsCC,		&midiMsg[startPayloadPos], lengthPayload, &global, (NULL!=trace)?(trace + 23):NULL )){
+			tcode	= tcode | ( 1 << 2 );
+			if (NULL!=trace) *trace	= tcode;
+			return (true);
+		}
+		if (load_BS_param( BS_ID_tunerCC,		&midiMsg[startPayloadPos], lengthPayload, &global, (NULL!=trace)?(trace + 24):NULL )){
+			tcode	= tcode | ( 1 << 2 );
+			if (NULL!=trace) *trace	= tcode;
+			return (true);
+		}
+		if (load_BS_param( BS_ID_buttonType,	&midiMsg[startPayloadPos], lengthPayload, &global, (NULL!=trace)?(trace + 25):NULL )){
+			tcode	= tcode | ( 1 << 2 );
+			if (NULL!=trace) *trace	= tcode;
+			return (true);
+		}
+		if (load_BS_param( BS_ID_bankName,		&midiMsg[startPayloadPos], lengthPayload, &global, (NULL!=trace)?(trace + 26):NULL )){
+			tcode	= tcode | ( 1 << 2 );
+			if (NULL!=trace) *trace	= tcode;
+			return (true);
+		}
+		if (load_BS_param( BS_ID_selectBankAction,			&midiMsg[startPayloadPos], lengthPayload, &global, (NULL!=trace)?(trace + 27):NULL )){
+			tcode	= tcode | ( 1 << 2 );
+			if (NULL!=trace) *trace	= tcode;
+			return (true);
+		}
+		if (load_BS_param( BS_ID_selectBankActionProgNum,	&midiMsg[startPayloadPos], lengthPayload, &global, (NULL!=trace)?(trace + 28):NULL )){
+			tcode	= tcode | ( 1 << 2 );
+			if (NULL!=trace) *trace	= tcode;
+			return (true);
+		}
 		// пытаемся декодировать контекст кнопки
 		for(uint8_t btnNum=0; btnNum<FOOT_BUTTONS_NUM; btnNum++){
-			if (load_BS_param( btnNum,	&midiMsg[startPayloadPos], lengthPayload, &global, trace + 22 + btnNum)){
-				LOG(SEV_TRACE,"%s %s", __FUNCTION__, "BS_ID_ButtonCotext");
+			if(load_BS_context( BS_ID_CTX_relays, btnNum, &midiMsg[startPayloadPos], lengthPayload, &global, (NULL!=trace)?(trace + 29 + btnNum*5):NULL )){
 				tcode	= tcode | ( 1 << 2 );
-				*trace	= tcode;
+				if (NULL!=trace) *trace	= tcode;
+				return (true);
+			}
+			if(load_BS_context( BS_ID_CTX_presetChangeContext, btnNum, &midiMsg[startPayloadPos], lengthPayload, &global, (NULL!=trace)?(trace + 30 + btnNum*5):NULL )){
+				tcode	= tcode | ( 1 << 2 );
+				if (NULL!=trace) *trace	= tcode;
+				return (true);
+			}
+			if(load_BS_context( BS_ID_CTX_commonContext, btnNum, &midiMsg[startPayloadPos], lengthPayload, &global, (NULL!=trace)?(trace + 31 + btnNum*5):NULL )){
+				tcode	= tcode | ( 1 << 2 );
+				if (NULL!=trace) *trace	= tcode;
+				return (true);
+			}
+			if(load_BS_context( BS_ID_CTX_bankNumber, btnNum, &midiMsg[startPayloadPos], lengthPayload, &global, (NULL!=trace)?(trace + 32 + btnNum*5):NULL )){
+				tcode	= tcode | ( 1 << 2 );
+				if (NULL!=trace) *trace	= tcode;
+				return (true);
+			}
+			if(load_BS_context( BS_ID_CTX_nameAlias, btnNum, &midiMsg[startPayloadPos], lengthPayload, &global, (NULL!=trace)?(trace + 33 + btnNum*5):NULL )){
+				tcode	= tcode | ( 1 << 2 );
+				if (NULL!=trace) *trace	= tcode;
 				return (true);
 			}
 		}
-		if (load_BS_param( BS_ID_tapCC,			&midiMsg[startPayloadPos], lengthPayload, &global, trace + 34 )){
-			LOG(SEV_TRACE,"%s %s", __FUNCTION__, "BS_ID_tapCC");
-			tcode	= tcode | ( 1 << 2 );
-			*trace	= tcode;
-			return (true);
-		}
-		if (load_BS_param( BS_ID_pedalsCC,		&midiMsg[startPayloadPos], lengthPayload, &global, trace + 35 )){
-			LOG(SEV_TRACE,"%s %s", __FUNCTION__, "BS_ID_pedalsCC");
-			tcode	= tcode | ( 1 << 2 );
-			*trace	= tcode;
-			return (true);
-		}
-		if (load_BS_param( BS_ID_tunerCC,		&midiMsg[startPayloadPos], lengthPayload, &global, trace + 36 )){
-			LOG(SEV_TRACE,"%s %s", __FUNCTION__, "BS_ID_tunerCC");
-			tcode	= tcode | ( 1 << 2 );
-			*trace	= tcode;
-			return (true);
-		}
-		if (load_BS_param( BS_ID_buttonType,	&midiMsg[startPayloadPos], lengthPayload, &global, trace + 37 )){
-			LOG(SEV_TRACE,"%s %s", __FUNCTION__, "BS_ID_buttonType");
-			tcode	= tcode | ( 1 << 2 );
-			*trace	= tcode;
-			return (true);
-		}
-		if (load_BS_param( BS_ID_bankName,		&midiMsg[startPayloadPos], lengthPayload, &global, trace + 38 )){
-			LOG(SEV_TRACE,"%s %s", __FUNCTION__, "BS_ID_bankName");
-			tcode	= tcode | ( 1 << 2 );
-			*trace	= tcode;
-			return (true);
-		}
-	//}
+	}
 	tcode	= tcode | (HMS_NO_DECODE << 3);
-	*trace	= tcode;
+	if (NULL!=trace) *trace	= tcode;
 	return (false);
 }
 
 bool handleMidiSysExConfig( uint8_t midiMsgType, uint8_t * midiMsg, uint16_t midiMsgLength, uint16_t midiBuffLength ){
-	LOG(SEV_TRACE,"%s", __FUNCTION__);
+	//LOG(SEV_TRACE,"%s", __FUNCTION__);
 	bool		res = false;
 	uint8_t		trace[TRACE_LENGTH];
 	uint32_t	manfId = MANUFACTURER_ID;
@@ -1017,8 +1279,8 @@ bool handleMidiSysExConfig( uint8_t midiMsgType, uint8_t * midiMsg, uint16_t mid
 				if ( HMS_BAD_FIRST_CHECK == error ) return(res);
 			}
 		}
-		//send_ACK();
-		send_ACK_TRACE( trace );
+		send_ACK();
+		//send_ACK_TRACE( trace );
 	}
 	return(res);
 }
