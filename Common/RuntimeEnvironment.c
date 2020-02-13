@@ -6,6 +6,7 @@
  */ 
 
 #include "RuntimeEnvironment.h"
+#include "MidiHelpers.h"
 #include <stdint.h>
 #include <stdbool.h>
 
@@ -22,4 +23,11 @@ void clearEvents()
 bool checkEventByMask(uint8_t mask)
 {
 	return (updateRequests.eventFlags_ & mask) ? true : false;
+}
+
+void runtimeEnvironmentSetAllIaOff()
+{
+	uint8_t i;
+	for (i = 0; i < FOOT_BUTTONS_NUM; ++i)
+		runtimeEnvironment.currentIaState_[i] = IA_STATE_OFF;
 }

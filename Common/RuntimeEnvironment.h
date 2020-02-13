@@ -66,4 +66,8 @@ void setEventByMask(uint8_t mask);
 void clearEvents();
 bool checkEventByMask(uint8_t mask);
 
+//helper to set all IA to OFF state
+void runtimeEnvironmentSetAllIaOff();
+
+
 #endif /* RUNTIMEENVIRONMENT_H_ */

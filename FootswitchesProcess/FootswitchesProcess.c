@@ -17,7 +17,6 @@
 //Same procedure for all button types, there need to change preset 
 void selectNewPresetCommonPart(uint8_t buttonNum)
 {
-	//Send bank select message before preset number
 	uint8_t midiChannelToSend;
 	midiChannelToSend = bank.buttonContext[buttonNum].presetChangeContext.midiChannelNumbers[0];
 	if(midiChannelToSend == MIDI_CHANNEL_PRIMARY)
@@ -39,6 +38,8 @@ void selectNewPresetCommonPart(uint8_t buttonNum)
 		requestAxefxInfo(IA_STATE_FUNCTION_ID);
 		runtimeEnvironment.isTimeToShowPresetName_ = 0;//и будем показывать имя банка, пока не придет имя пресета
 	}
+	//TODO add same for AFXEFX III
+		
 }
 
 static uint8_t tapMomentaryLock = 0;
@@ -157,6 +158,8 @@ void presetChangeProcess(ButtonEvent *buttonEvent)
 	runtimeEnvironment.activePresetNumber_ = bank.buttonContext[buttonNum].presetChangeContext.programsNumbers[0];
 	
 	tapMomentaryLock = 0;
+	
+	//send 1st program changes and perform other common operations
 	selectNewPresetCommonPart(buttonNum);
 	
 	//Send 3 other program changes
@@ -186,7 +189,7 @@ void presetChangeProcess(ButtonEvent *buttonEvent)
 		//Some of CC_tg buttons should send its new value to midi out
 		if(bank.buttonType[i] == CC_TOGGLE && bank.buttonContext[i].commonContext.contolAndNrpnChangeContext_.autoSendState != 0)
 		{
-			valToSend = runtimeEnvironment.currentIaState_[i] == IA_STATE_ON ? bank.buttonContext[i].commonContext.contolAndNrpnChangeContext_.paramLsbOnValue : bank.buttonContext[i].commonContext.contolAndNrpnChangeContext_.paramLsbOffValue;
+			valToSend = (runtimeEnvironment.currentIaState_[i] == IA_STATE_ON) ? bank.buttonContext[i].commonContext.contolAndNrpnChangeContext_.paramLsbOnValue : bank.buttonContext[i].commonContext.contolAndNrpnChangeContext_.paramLsbOffValue;
 			midiSendControlChange(bank.buttonContext[i].commonContext.contolAndNrpnChangeContext_.ctrlLsbNumber, valToSend, global.midiChanNum);
 		}
 	}
@@ -385,6 +388,32 @@ void noteProcess(bool isOn, ButtonEvent *buttonEvent)
 			,global.midiChanNum);
 }
 
+void presetUpDown()
+{
+	sendPcWithOptionalBs(runtimeEnvironment.activePresetNumber_
+		,runtimeEnvironment.activeBankNumber_
+		,global.midiChanNum
+		,global.bankSelectMessType
+		,global.useBankSelectMess);
+
+	
+	//is some bidirectional devices are connected, set all IA to inactive state and wait new IA state from device
+	//if(runtimeEnvironment.isAxeFxConnected_ == true || runtimeEnvironment.isAxeFx3Connected_ == true || runtimeEnvironment.isKpaConnected_ == true)
+
+	//reset IA states
+	runtimeEnvironmentSetAllIaOff();
+	
+	if (runtimeEnvironment.isAxeFxConnected_ == true)//Если акс подключен то отправим запрос на состояние эффектов
+	{
+		requestAxefxInfo(IA_STATE_FUNCTION_ID);
+		runtimeEnvironment.isTimeToShowPresetName_ = 0;//и будем показывать имя банка, пока не придет имя пресета
+	}
+	//add same for axefxIII
+	
+	updateRequests.updateLedsRq_ = 1;
+	updateRequests.updatePedalLedsRq_ = 1;
+	updateRequests.updateScreenRq_ = 1;
+}
 void presetUpProcess(ButtonEvent* buttonEvent)
 {
 	if(buttonEvent->actionType_ != BUTTON_PUSH)//only on button push
@@ -395,27 +424,13 @@ void presetUpProcess(ButtonEvent* buttonEvent)
 		if(global.useBankSelectMess == USE_BANK_SELECT)//Also need to increment BS message value here
 			cycleIncUcahrVal(&runtimeEnvironment.activeBankNumber_, MAX_BANK_SELECT_MESSAGE_VALUE);
 	}
-	
-	sendPcWithOptionalBs(runtimeEnvironment.activePresetNumber_
-		,runtimeEnvironment.activeBankNumber_
-		,global.midiChanNum
-		,global.bankSelectMessType
-		,global.useBankSelectMess);
-
-	
-	if (runtimeEnvironment.isAxeFxConnected_ == true)//Если акс подключен то отправим запрос на состояние эффектов
-	{
-		requestAxefxInfo(IA_STATE_FUNCTION_ID);
-		runtimeEnvironment.isTimeToShowPresetName_ = 0;//и будем показывать имя банка, пока не придет имя пресета
-	}
-	updateRequests.updateScreenRq_++;
-		
+	presetUpDown();
 }
 
 void presetDownProcess(ButtonEvent* buttonEvent)
 {
 	if(buttonEvent->actionType_ != BUTTON_PUSH)//only on button push
-	return;
+		return;
 	
 	if (cycleDecUcahrVal(&runtimeEnvironment.activePresetNumber_, MAX_PROGRAM_CHANGE_MESSAGE_VALUE))
 	{
@@ -423,18 +438,7 @@ void presetDownProcess(ButtonEvent* buttonEvent)
 			cycleDecUcahrVal(&runtimeEnvironment.activeBankNumber_, MAX_BANK_SELECT_MESSAGE_VALUE);
 	}
 	
-	sendPcWithOptionalBs(runtimeEnvironment.activePresetNumber_
-			,runtimeEnvironment.activeBankNumber_
-			,global.midiChanNum
-			,global.bankSelectMessType
-			,global.useBankSelectMess);
-
-	if (runtimeEnvironment.isAxeFxConnected_ == true)//Если акс подключен то отправим запрос на состояние эффектов
-	{
-		requestAxefxInfo(IA_STATE_FUNCTION_ID);
-		runtimeEnvironment.isTimeToShowPresetName_ = 0;//и будем показывать имя банка, пока не придет имя пресета
-	}
-	updateRequests.updateScreenRq_++;	
+	presetUpDown();
 }
 
 void bankChangeProcess(ButtonEvent* buttonEvent, ButtonType buttonType)
