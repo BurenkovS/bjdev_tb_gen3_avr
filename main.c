@@ -70,7 +70,7 @@ int main(void)
 	setPwmValueWithScale(SCREEN_CONTRAST_PWM_NUM, global.screenContrast);
 
 	runtimeEnvironment.activePresetButtonNumber_ = 0;
-	runtimeEnvironment.activePresetNumber_ = bank.buttonContext[0].presetChangeContext.programsNumbers[0];
+	//runtimeEnvironment.activePresetNumber_ = bank.buttonContext[0].presetChangeContext.programsNumbers[0];
 	//Set default preset name to show. This string will replace by first valid sysex message with name
 	strcpy((char*)&(runtimeEnvironment.vendorPresetName_), ("No preset name"));
 	
@@ -89,7 +89,7 @@ int main(void)
 #endif
 	
 	ledCheck(1);
-
+	
     while (1) 
     {
 		if(midiRead(MIDI_INTERFACE, midiMessageFromMidi, &inputMessType, &inputMessLength))

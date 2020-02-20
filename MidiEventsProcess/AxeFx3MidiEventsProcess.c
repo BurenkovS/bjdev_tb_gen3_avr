@@ -66,17 +66,17 @@ uint8_t parceAxefx3PresetName(const uint8_t* message, char* name)
     uint8_t i;
 
     if (*(message + AXEFX3_FCODE_OFFSET) != AXEFX3_PATCH_NAME_FUNCTION_ID)
-    return 0;
+		return 0;
 
     for (i = AXEFX3_PRESET_NAME_OFFSET; *(message + i) != '\0'; ++i)
     {
 	    *(name + i - AXEFX3_PRESET_NAME_OFFSET) = *(message + i);
 	    
 	    if(i >= AXEFX3_PRESET_NAME_OFFSET + MAX_AXEFX3_STRING_LENGTH)
-	    break;
+			break;
     }
     *(name + i - AXEFX3_PRESET_NAME_OFFSET) = '\0';
-    return 1;
+		return 1;
 }
 
 uint8_t isAxefx3Tap(const uint8_t* message)
@@ -87,14 +87,39 @@ uint8_t isAxefx3Tap(const uint8_t* message)
 		return 1;
 }
 
-uint8_t queryPatchName[10]  = {0xF0, 0x00, 0x01, 0x74, 0x10, AXEFX3_PATCH_NAME_FUNCTION_ID, 0x7F, 0x7F, 0x18, 0xF7};
-void axefx3QueryPatchName()
+//The general format of the sysex commands is:
+//F0 00 01 74 10 cc dd dd dd … cs F7
+//where cc is the command opcode, dd is a variable number of bytes and cs is the XOR checksum.
+//size = number of "dd" 
+//data = pointer to dd dd dd...
+uint8_t axefx3CommandCommonPart[5]  = {0xF0, 0x00, 0x01, 0x74, 0x10};
+void axefx3SendCommand(uint8_t command, uint8_t *data, uint8_t size)
 {
 	uint8_t i;
-	for(i = 0; i < sizeof(queryPatchName); ++i)
-		uart0PutChar(pgm_read_byte(&queryPatchName[i]));
+	uint8_t summ = 0;
+	for(i = 0; i < sizeof(axefx3CommandCommonPart); ++i)
+	{
+		uart0PutChar(axefx3CommandCommonPart[i]);
+		summ ^= axefx3CommandCommonPart[i];
+	}
+	uart0PutChar(command);
+	summ ^= command;
+
+	for(i = 0; i < size; ++i)
+	{
+		uart0PutChar(data[i]);
+		summ ^= data[i];
+	}
+
+	uart0PutChar(0x7F & summ);
+	uart0PutChar(0xF7);
 }
 
+void axefx3QueryPatchName()
+{
+	uint8_t data[2] = {0x7F, 0x7F};
+	axefx3SendCommand(AXEFX3_PATCH_NAME_FUNCTION_ID, data, 2);
+}
 
 void handleMidiEventAxeFx3(uint8_t in_MessType
         ,uint8_t* midiMessage

@@ -26,7 +26,8 @@
 #define AXEFX3_FCODE_OFFSET 4 //function ID offset in SysEx message
 
 //Supported function ID
-#define AXEFX3_PATCH_NAME_FUNCTION_ID     0x0D//
+#define AXEFX3_PATCH_NAME_FUNCTION_ID		0x0D
+#define AXEFX3_STATUS_DUMP_COMMAND			0x13
 #define AXEFX3_TAP_EVENT_ID      0x10//Tap event
 #define AXEFX3_TUNER_FUNCTION_ID 0x11 //Tuner function ID
 
@@ -34,6 +35,9 @@
 void handleMidiEventAxeFx3(uint8_t in_MessType
 ,uint8_t* midiMessage
 ,uint8_t sys_ex_length);
+
+//requests to AxeFxIII
+void axefx3QueryPatchName();
 
 
 #endif /* AXEFX3MIDIEVENTSPROCESS_H_ */

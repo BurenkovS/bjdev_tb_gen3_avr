@@ -359,16 +359,24 @@ void Menu_MainScreenSelectCallback()
 		DisplayUpdateFooter(Main_screen_str);
 	
 	ClearCurrentContext();
-	CurrentFunctionContext.min = 0;
-	CurrentFunctionContext.max = 127;
+	//Actually no need context here -  mainScreenExecuteFunction is using only for this particular menu and all processing performed inside
+	CurrentFunctionContext.min = 0;//not used in ExecuteFunction.
+	CurrentFunctionContext.max = 127;//
 	CurrentFunctionContext.position = 3;
 	
-	CurrentFunctionContext.value = &runtimeEnvironment.activePresetNumber_;
+	//CurrentFunctionContext.value = &runtimeEnvironment.activePresetNumber_;
 	CurrentFunctionContext.valueAddr = 0xFFFFFFFF;//GlobalSettings_ADDR + offsetof(GlobalSettings, midiChanNum);
-	//CurrentFunctionContext.ExecuteFunction = CommonExecuteFunction;
 	CurrentFunctionContext.ExecuteFunction = MainScreenExecuteFunction;
+	
 	if(!runtimeEnvironment.isTimeToShowTuner_)
-		DisplayUpdateCurrentValue(runtimeEnvironment.activePresetNumber_ + 1, CurrentFunctionContext.position);
+	{
+		uint16_t dispVal = bank.buttonContext[runtimeEnvironment.activePresetButtonNumber_].presetChangeContext.programsNumbers[0];
+		if(global.useBankSelectMess == USE_BANK_SELECT)
+			dispVal +=128*bank.buttonContext[runtimeEnvironment.activePresetButtonNumber_].presetChangeContext.banksNumbers[0];	
+		
+		DisplayUpdateCurrentValue(dispVal + 1, CurrentFunctionContext.position);
+	}
+	
 	
 	CurrentMenuPosition = MenuMain;	
 }
@@ -1782,7 +1790,7 @@ void Menu_SelectSaveBank_SelectCallback(void)
 	//LOG(SEV_TRACE,"%s", __FUNCTION__);	
 	SelectBankRoutine();
 	
-	DisplayUpdateCurrentValue(/*global.bnkNum*/runtimeEnvironment.activeBankNumber_ + 1, CurrentFunctionContext.position);
+	DisplayUpdateCurrentValue(runtimeEnvironment.activeBankNumber_ + 1, CurrentFunctionContext.position);
 	
 	setIndicator(' ', 0);
 	
@@ -1796,7 +1804,7 @@ void Menu_LoadBank_SelectCallback(void)
 	//LOG(SEV_TRACE,"%s", __FUNCTION__);	
 	SelectBankRoutine();
 	
-	LCDWriteIntXY(11, 0, /*global.bnkNum*/runtimeEnvironment.activeBankNumber_ + 1, 3);
+	LCDWriteIntXY(11, 0, runtimeEnvironment.activeBankNumber_ + 1, 3);
 	LCDWriteStringXY(0, 1, bank.BankName);
 	
 	setIndicator(' ', 0);
@@ -1833,13 +1841,13 @@ void Menu_CopyBank_SelectCallback(void)
 	CurrentFunctionContext.max = runtimeEnvironment.totalBanksAvalible_ - 1;//BanksCount - 1;
 	CurrentFunctionContext.currentValue = 0;
 	
-	CurrentBankIndex = /*global.bnkNum*/runtimeEnvironment.activeBankNumber_;
+	CurrentBankIndex = runtimeEnvironment.activeBankNumber_;
 	
 	setIndicator(' ', 0);
 	
 	CurrentMenuPosition = MenuCopyBank;
 	
-	DisplayUpdateCurrentValue(/*global.bnkNum + 1*/runtimeEnvironment.activeBankNumber_, 4);
+	DisplayUpdateCurrentValue(runtimeEnvironment.activeBankNumber_, 4);
 	DisplayUpdateCurrentValue(1, 12);
 	
 	Menu_Navigate(MENU_CHILD);
@@ -2147,23 +2155,42 @@ void ChangeMessageFunction(void)
 void MainScreenExecuteFunction(void)
 {
 	//LOG(SEV_TRACE,"%s", __FUNCTION__);	
-	uint8_t *value = CurrentFunctionContext.value;
+	//uint8_t *value = CurrentFunctionContext.value;
 	
+	uint16_t value;
+	uint16_t valueMax;
+	uint16_t *presetNumPointer = &bank.buttonContext[runtimeEnvironment.activePresetButtonNumber_].presetChangeContext.programsNumbers[0];
+	uint8_t *bankNumPointer = &bank.buttonContext[runtimeEnvironment.activePresetButtonNumber_].presetChangeContext.banksNumbers[0];
+	uint8_t midiChannel = bank.buttonContext[runtimeEnvironment.activePresetButtonNumber_].presetChangeContext.midiChannelNumbers[0];
+	
+	if(global.useBankSelectMess == USE_BANK_SELECT)
+	{
+		value = (*bankNumPointer)*128 + *presetNumPointer;
+		valueMax = MAX_BANK_SELECT_MESSAGE_VALUE*128;
+	}
+	else
+	{
+		value = *presetNumPointer;
+		valueMax = 128; 
+	}
+
 	if (CurrentFunctionContext.action == ValueIncrement)
 	{
-		if (((*value)++) == CurrentFunctionContext.max)
-			*value = CurrentFunctionContext.min;
-			
-		bank.buttonContext[runtimeEnvironment.activePresetButtonNumber_].presetChangeContext.programsNumbers[0] = *value;
-		midiSendProgramChange(*value, bank.buttonContext[runtimeEnvironment.activePresetButtonNumber_].presetChangeContext.midiChannelNumbers[0]);
+		if ((value++) == valueMax)
+			value = 0;
+	
+		*presetNumPointer = value%128;
+		*bankNumPointer = value/128;
+	 	sendPcWithOptionalBs(*presetNumPointer, *bankNumPointer, midiChannel, global.bankSelectMessType, global.useBankSelectMess);
 	} 
 	else if (CurrentFunctionContext.action == ValueDecrement)
 	{
-		if (((*value)--) == CurrentFunctionContext.min)
-			*value = CurrentFunctionContext.max;
+		if ((value--) == 0)
+			value = valueMax-1;
 			
-		bank.buttonContext[runtimeEnvironment.activePresetButtonNumber_].presetChangeContext.programsNumbers[0] = *value;
-		midiSendProgramChange(*value, bank.buttonContext[runtimeEnvironment.activePresetButtonNumber_].presetChangeContext.midiChannelNumbers[0]);
+		*presetNumPointer = value%128;
+		*bankNumPointer = value/128;
+		sendPcWithOptionalBs(*presetNumPointer, *bankNumPointer, midiChannel, global.bankSelectMessType, global.useBankSelectMess);
 	}
 	else if (CurrentFunctionContext.action == ValueSaveAndExit)
 	{
@@ -2178,7 +2205,7 @@ void MainScreenExecuteFunction(void)
 	else
 		return;
 	
-	DisplayUpdateCurrentValue(*value + 1, CurrentFunctionContext.position);
+	DisplayUpdateCurrentValue(value + 1, CurrentFunctionContext.position);
 	
 	setCursor(CurrentFunctionContext.position);
 }

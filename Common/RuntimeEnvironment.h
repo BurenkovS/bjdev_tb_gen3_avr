@@ -23,8 +23,8 @@
 typedef struct RuntimeEnvironment 
 {
 	uint8_t activePresetButtonNumber_;
-	uint8_t activePresetNumber_;//Last sent Program Change message from 1st of total 4 message on PC button push
-	uint8_t activeBankNumber_;//Last sent Bank select message from 1st of total 4 message on PC button push
+	//uint8_t activePresetNumber_;//Last sent Program Change message from 1st of total 4 message on PC button push
+	uint8_t activeBankNumber_;//Active internal bank
 	uint8_t totalBanksAvalible_;//Total banks available depends on device model. Calculates on start and not changed during operation
 	//AxeFx related flags
 	bool isAxeFxConnected_;

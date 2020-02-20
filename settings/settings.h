@@ -221,10 +221,8 @@ typedef enum
 #define MAX_BANK_SELECT_MESSAGE_VALUE 7
 typedef struct
 {
-	/*Нумерация битов реле от старшего к младшему по 2 бита	на значение*/
-	//uint8_t relays;	
 	uint8_t midiChannelNumbers[MAX_PROGRAMS_TO_SEND];
-	uint16_t programsNumbers[MAX_PROGRAMS_TO_SEND];//14 bit
+	uint16_t programsNumbers[MAX_PROGRAMS_TO_SEND];//14 bit??
 	uint8_t banksNumbers[MAX_PROGRAMS_TO_SEND];
 	uint16_t iaState;//14 bit	
 }PresetChangeContext;

@@ -13,6 +13,7 @@
 #include "TaskManager.h"
 #include "Maintenance.h"
 #include "AxeFxMidiEventsProcess.h"
+#include "AxeFx3MidiEventsProcess.h"
 
 //Same procedure for all button types, there need to change preset 
 void selectNewPresetCommonPart(uint8_t buttonNum)
@@ -38,8 +39,12 @@ void selectNewPresetCommonPart(uint8_t buttonNum)
 		requestAxefxInfo(IA_STATE_FUNCTION_ID);
 		runtimeEnvironment.isTimeToShowPresetName_ = 0;//и будем показывать им€ банка, пока не придет им€ пресета
 	}
-	//TODO add same for AFXEFX III
-		
+	
+	else if (runtimeEnvironment.isAxeFx3Connected_ == true)//≈сли акс 3 подключен то отправим запрос на им€
+	{
+		axefx3QueryPatchName();
+		runtimeEnvironment.isTimeToShowPresetName_ = 0;//и будем показывать им€ банка, пока не придет им€ пресета
+	}
 }
 
 static uint8_t tapMomentaryLock = 0;
@@ -155,7 +160,7 @@ void presetChangeProcess(ButtonEvent *buttonEvent)
 		
 	uint8_t i;
 	runtimeEnvironment.activePresetButtonNumber_ = buttonNum;
-	runtimeEnvironment.activePresetNumber_ = bank.buttonContext[buttonNum].presetChangeContext.programsNumbers[0];
+	//runtimeEnvironment.activePresetNumber_ = bank.buttonContext[buttonNum].presetChangeContext.programsNumbers[0];
 	
 	tapMomentaryLock = 0;
 	
@@ -390,11 +395,11 @@ void noteProcess(bool isOn, ButtonEvent *buttonEvent)
 
 void presetUpDown()
 {
-	sendPcWithOptionalBs(runtimeEnvironment.activePresetNumber_
-		,runtimeEnvironment.activeBankNumber_
-		,global.midiChanNum
-		,global.bankSelectMessType
-		,global.useBankSelectMess);
+	sendPcWithOptionalBs(	bank.buttonContext[runtimeEnvironment.activePresetButtonNumber_].presetChangeContext.programsNumbers[0]//runtimeEnvironment.activePresetNumber_
+							,bank.buttonContext[runtimeEnvironment.activePresetButtonNumber_].presetChangeContext.banksNumbers[0]//,runtimeEnvironment.activeBankNumber_
+							,global.midiChanNum
+							,global.bankSelectMessType
+							,global.useBankSelectMess);
 
 	
 	//is some bidirectional devices are connected, set all IA to inactive state and wait new IA state from device
@@ -414,15 +419,16 @@ void presetUpDown()
 	updateRequests.updatePedalLedsRq_ = 1;
 	updateRequests.updateScreenRq_ = 1;
 }
+
 void presetUpProcess(ButtonEvent* buttonEvent)
 {
 	if(buttonEvent->actionType_ != BUTTON_PUSH)//only on button push
 		return;
 		
-	if (cycleIncUcahrVal(&runtimeEnvironment.activePresetNumber_, MAX_PROGRAM_CHANGE_MESSAGE_VALUE))
+	if (cycleIncUcahrVal((uint8_t*)&bank.buttonContext[runtimeEnvironment.activePresetButtonNumber_].presetChangeContext.programsNumbers[0], MAX_PROGRAM_CHANGE_MESSAGE_VALUE))
 	{
 		if(global.useBankSelectMess == USE_BANK_SELECT)//Also need to increment BS message value here
-			cycleIncUcahrVal(&runtimeEnvironment.activeBankNumber_, MAX_BANK_SELECT_MESSAGE_VALUE);
+			cycleIncUcahrVal(&bank.buttonContext[runtimeEnvironment.activePresetButtonNumber_].presetChangeContext.banksNumbers[0], MAX_BANK_SELECT_MESSAGE_VALUE);
 	}
 	presetUpDown();
 }
@@ -432,10 +438,10 @@ void presetDownProcess(ButtonEvent* buttonEvent)
 	if(buttonEvent->actionType_ != BUTTON_PUSH)//only on button push
 		return;
 	
-	if (cycleDecUcahrVal(&runtimeEnvironment.activePresetNumber_, MAX_PROGRAM_CHANGE_MESSAGE_VALUE))
+	if (cycleDecUcahrVal((uint8_t*)&bank.buttonContext[runtimeEnvironment.activePresetButtonNumber_].presetChangeContext.programsNumbers[0], MAX_PROGRAM_CHANGE_MESSAGE_VALUE))
 	{
 		if(global.useBankSelectMess == USE_BANK_SELECT)//Also need to increment BS message value here
-			cycleDecUcahrVal(&runtimeEnvironment.activeBankNumber_, MAX_BANK_SELECT_MESSAGE_VALUE);
+			cycleDecUcahrVal(&bank.buttonContext[runtimeEnvironment.activePresetButtonNumber_].presetChangeContext.banksNumbers[0], MAX_BANK_SELECT_MESSAGE_VALUE);
 	}
 	
 	presetUpDown();
