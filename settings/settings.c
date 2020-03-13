@@ -79,6 +79,7 @@ void setDefaultBankSettings()
 	bank.selectBankActionProgNum = 0;
 	
 	uint32_t i;
+	char buttonName[16];
 	for (i = 0; i < FOOT_BUTTONS_NUM; ++i)
 	{
 		bank.buttonType[i] = PRESET_CHANGE;//All buttons will preset switchers
@@ -99,6 +100,9 @@ void setDefaultBankSettings()
 		bank.buttonContext[i].commonContext.contolAndNrpnChangeContext_.paramMsbOnValue = 127;
 		
 		bank.buttonContext[i].commonContext.contolAndNrpnChangeContext_.vendorBlockId = VENDOR_BLOCK_ID_NONE;
+		
+		sprintf(buttonName, "Button %d", i+1);
+		strcpy((char*)&(bank.buttonContext[i].nameAlias), buttonName);
 	}
 }
 

@@ -22,6 +22,8 @@
 #define AXEFX3_PRESET_NAME_OFFSET 7 //Axe fx preset name offset
 #define MAX_AXEFX3_STRING_LENGTH 15 //Max string length acceptable from AxeFx3
 
+#define AXEFX3_STATUS_DUMP_OFFSET 5 //Status dump(take IA states from here)
+#define AXEFX3_STATUS_DUMP_SIZE 3
 //Maintenance
 #define AXEFX3_FCODE_OFFSET 4 //function ID offset in SysEx message
 
@@ -38,6 +40,10 @@ void handleMidiEventAxeFx3(uint8_t in_MessType
 
 //requests to AxeFxIII
 void axefx3QueryPatchName();
+
+//request IA states
+void axefx3QueryStatusDump();
+
 
 
 #endif /* AXEFX3MIDIEVENTSPROCESS_H_ */

@@ -87,6 +87,51 @@ uint8_t isAxefx3Tap(const uint8_t* message)
 		return 1;
 }
 
+uint8_t parseAxefx3IaState(  const uint8_t sys_ex_length
+							,const uint8_t* sys_ex_data)
+{
+	uint8_t i;
+	uint8_t j;
+	uint8_t MS_nibble;
+	uint8_t LS_nibble;
+	uint8_t ms_nible_index;
+	uint8_t ls_nible_index;
+	uint8_t ia_state_index;
+	uint8_t ia_state;
+	uint8_t nums_of_blocks;
+	uint16_t effectId;
+
+	if (*(sys_ex_data + AXEFX3_FCODE_OFFSET) != AXEFX3_STATUS_DUMP_COMMAND)//Check message is IA state info
+		return 0;
+
+	nums_of_blocks = (sys_ex_length - AXEFX3_STATUS_DUMP_OFFSET)/AXEFX3_STATUS_DUMP_SIZE;
+
+	for (j = 0; j < nums_of_blocks; j++)
+	{
+		ms_nible_index = AXEFX3_STATUS_DUMP_SIZE*j + AXEFX3_STATUS_DUMP_OFFSET + 1;
+		ls_nible_index = AXEFX3_STATUS_DUMP_SIZE*j + AXEFX3_STATUS_DUMP_OFFSET + 0;
+
+		MS_nibble = *(sys_ex_data + ms_nible_index);
+		LS_nibble = *(sys_ex_data + ls_nible_index);
+
+		effectId = ((LS_nibble >> 1) | (MS_nibble << 6)) & 0x7F;
+
+		for (i = 0; i <= FOOT_BUTTONS_NUM - 1; i++)//find ID in buttons
+		{
+			if (bank.buttonContext[i].commonContext.contolAndNrpnChangeContext_.vendorBlockId == (uint8_t)effectId)//
+			{
+				ia_state_index = AXEFX3_STATUS_DUMP_SIZE*j + AXEFX3_STATUS_DUMP_OFFSET + 2;
+				ia_state = *(sys_ex_data + ia_state_index) & 0x01;
+				if (ia_state != 0)
+					runtimeEnvironment.currentIaState_[i] = IA_STATE_OFF;
+				else
+					runtimeEnvironment.currentIaState_[i] = IA_STATE_ON;
+			}
+		}
+	}
+	return 1;
+}
+
 //The general format of the sysex commands is:
 //F0 00 01 74 10 cc dd dd dd … cs F7
 //where cc is the command opcode, dd is a variable number of bytes and cs is the XOR checksum.
@@ -120,6 +165,13 @@ void axefx3QueryPatchName()
 	uint8_t data[2] = {0x7F, 0x7F};
 	axefx3SendCommand(AXEFX3_PATCH_NAME_FUNCTION_ID, data, 2);
 }
+
+void axefx3QueryStatusDump()
+{
+	uint8_t dummy;
+	axefx3SendCommand(AXEFX3_STATUS_DUMP_COMMAND, &dummy, 0);
+}
+
 
 void handleMidiEventAxeFx3(uint8_t in_MessType
         ,uint8_t* midiMessage
