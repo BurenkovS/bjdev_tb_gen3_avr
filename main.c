@@ -72,7 +72,11 @@ int main(void)
 	runtimeEnvironment.activePresetButtonNumber_ = 0;
 	//runtimeEnvironment.activePresetNumber_ = bank.buttonContext[0].presetChangeContext.programsNumbers[0];
 	//Set default preset name to show. This string will replace by first valid sysex message with name
-	strcpy((char*)&(runtimeEnvironment.vendorPresetName_), ("No preset name"));
+	strcpy((char*)&(runtimeEnvironment.vendorPresetName_), bank.buttonContext[runtimeEnvironment.activePresetButtonNumber_].nameAlias);
+	
+	if(global.Show_pr_name == PRESET_AND_BANK)
+		setTaskSwitchBetweenPresetNameAndBankName();
+	
 	
 
 	//update LEDs after start sequence 

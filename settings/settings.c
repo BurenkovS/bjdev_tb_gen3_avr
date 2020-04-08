@@ -99,6 +99,10 @@ void setDefaultBankSettings()
 		bank.buttonContext[i].commonContext.contolAndNrpnChangeContext_.paramMsbOnValue = 127;
 		
 		bank.buttonContext[i].commonContext.contolAndNrpnChangeContext_.vendorBlockId = VENDOR_BLOCK_ID_NONE;
+		
+		sprintf(bank.buttonContext[i].nameAlias, "Button %d", (int)i+1);//TODO possible need remove sprintf to reduce code size
+		//strcpy((char*)&(bank.BankName), bnkNameWithNum);
+		
 	}
 }
 
@@ -135,7 +139,7 @@ void startupSettingsCheckAndLoad()
 	//Check external EEPROM is present
 	if(eepromPresentStartupCheck())
 	{
-		runtimeEnvironment.totalBanksAvalible_ = ((TOTAL_EEPROM_SIZE_BYTES - sizeof(FirmwareVersionInfoInEeprom) - sizeof(GlobalSettings))/sizeof(BankSettings));
+		runtimeEnvironment.totalBanksAvalible_ = (uint8_t)((TOTAL_EEPROM_SIZE_BYTES - sizeof(FirmwareVersionInfoInEeprom) - sizeof(GlobalSettings))/sizeof(BankSettings));
 		if(runtimeEnvironment.totalBanksAvalible_ > 128) 
 			runtimeEnvironment.totalBanksAvalible_ = 128;
 	}
