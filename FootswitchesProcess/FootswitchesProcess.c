@@ -40,9 +40,9 @@ void selectNewPresetCommonPart(uint8_t buttonNum)
 		runtimeEnvironment.isTimeToShowPresetName_ = 0;//и будем показывать имя банка, пока не придет имя пресета
 	}
 	
-	else if (runtimeEnvironment.isAxeFx3Connected_ == true)//Если акс 3 подключен то отправим запрос на имя
+	else if (runtimeEnvironment.isAxeFx3Connected_ == true)//Если акс 3 то отправим запрос на состояние эффектов
 	{
-		axefx3QueryPatchName();
+		axefx3QueryStatusDump();
 		runtimeEnvironment.isTimeToShowPresetName_ = 0;//и будем показывать имя банка, пока не придет имя пресета
 	}
 }
@@ -450,7 +450,7 @@ void presetDownProcess(ButtonEvent* buttonEvent)
 void bankChangeProcess(ButtonEvent* buttonEvent, ButtonType buttonType)
 {
 	if(buttonEvent->actionType_ != BUTTON_PUSH)//only on button push
-	return;
+		return;
 	
 	if(buttonType == BANK_UP)
 	{
@@ -482,6 +482,12 @@ void bankChangeProcess(ButtonEvent* buttonEvent, ButtonType buttonType)
 		runtimeEnvironment.currentIaState_[i] = IA_STATE_OFF;
 		
 	LoadBank(runtimeEnvironment.activeBankNumber_, &bank);
+
+	if(bank.selectBankAction == SELECT_BANK_ACTION_SEND_PC)
+	{
+		midiSendProgramChange(bank.selectBankActionProgNum, global.midiChanNum); 
+	}
+	
 	updateRequests.updateScreenRq_ = true;	
 	updateRequests.updateLedsRq_ = true;
 	updateRequests.updatePedalLedsRq_ = true;			

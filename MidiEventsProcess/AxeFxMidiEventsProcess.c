@@ -17,10 +17,34 @@
 #include <avr/pgmspace.h>
 #include <stdint.h>
 
+/*
+
+AXEFX_MODEL_CODE 0x00//AXEFX standard code
+#define AXEFX_ULTRA_MODEL_CODE 0x01//AXEFX ultra code
+#define AXEFX_2_MODEL_CODE 0x03//AXEFX2 code
+#define AXEFX_2_XL_MODEL_CODE 0x06//AXEFX2 XL code
+#define AXEFX_2_XL_PLUS_MODEL_CODE 0x07 //AXEFX2 XL plus code
+#define AX8_MODEL_CODE 0x08
+
+*/
 uint8_t isAxefxMessage(uint8_t* message)
 {
     if(*message == 0x00 && *(message + 1) == 0x01 && *(message + 2) == 0x74)//AxeFx Manufacturer ID
-        return 1;
+	{
+		switch(*(message + 3))
+		{
+			case AXEFX_2_XL_PLUS_MODEL_CODE : 
+			case AXEFX_2_XL_MODEL_CODE : 
+			case AXEFX_2_MODEL_CODE : 
+			case AXEFX_ULTRA_MODEL_CODE :
+			case AXEFX_MODEL_CODE :
+			case AX8_MODEL_CODE : 
+				return 1;
+				break; 
+				
+			default: return 0;
+		}
+	}
     else
         return 0;
 }

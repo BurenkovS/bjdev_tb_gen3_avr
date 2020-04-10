@@ -75,7 +75,7 @@ void setDefaultBankSettings()
 	bank.tapCc = 30;
 	bank.tunerCc = 31;
 	
-	bank.selectBankAction = 0;
+	bank.selectBankAction = SELECT_BANK_NO_ACTION;
 	bank.selectBankActionProgNum = 0;
 	
 	uint32_t i;
@@ -101,7 +101,7 @@ void setDefaultBankSettings()
 		
 		bank.buttonContext[i].commonContext.contolAndNrpnChangeContext_.vendorBlockId = VENDOR_BLOCK_ID_NONE;
 		
-		sprintf(buttonName, "Button %d", i+1);
+		sprintf(buttonName, "Button %d", (int)(i+1));
 		strcpy((char*)&(bank.buttonContext[i].nameAlias), buttonName);
 	}
 }

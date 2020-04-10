@@ -87,8 +87,8 @@ uint8_t isAxefx3Tap(const uint8_t* message)
 		return 1;
 }
 
-uint8_t parseAxefx3IaState(  const uint8_t sys_ex_length
-							,const uint8_t* sys_ex_data)
+uint8_t parseAxefx3IaState( uint8_t* sys_ex_data
+							,uint8_t sys_ex_length)
 {
 	uint8_t i;
 	uint8_t j;
@@ -113,15 +113,17 @@ uint8_t parseAxefx3IaState(  const uint8_t sys_ex_length
 
 		MS_nibble = *(sys_ex_data + ms_nible_index);
 		LS_nibble = *(sys_ex_data + ls_nible_index);
+		
+		effectId = (LS_nibble | (MS_nibble << 6)) & 0x7F;
 
-		effectId = ((LS_nibble >> 1) | (MS_nibble << 6)) & 0x7F;
-
+		//get state for this effect
+		ia_state_index = AXEFX3_STATUS_DUMP_SIZE*j + AXEFX3_STATUS_DUMP_OFFSET + 2;
+		ia_state = *(sys_ex_data + ia_state_index) & 0x01;
+			
 		for (i = 0; i <= FOOT_BUTTONS_NUM - 1; i++)//find ID in buttons
 		{
 			if (bank.buttonContext[i].commonContext.contolAndNrpnChangeContext_.vendorBlockId == (uint8_t)effectId)//
 			{
-				ia_state_index = AXEFX3_STATUS_DUMP_SIZE*j + AXEFX3_STATUS_DUMP_OFFSET + 2;
-				ia_state = *(sys_ex_data + ia_state_index) & 0x01;
 				if (ia_state != 0)
 					runtimeEnvironment.currentIaState_[i] = IA_STATE_OFF;
 				else
@@ -207,6 +209,15 @@ void handleMidiEventAxeFx3(uint8_t in_MessType
 		            updateRequests.updateScreenRq_ = 1;
 	            }
             }
+			
+			if(parseAxefx3IaState(sys_ex_data, sys_ex_length))
+			{
+				if (global.Show_pr_name != ONLY_BANK)//If preset name display required
+				{
+					axefx3QueryPatchName();
+					updateRequests.updateLedsRq_ = 1;
+				}
+			}
 
             if (global.Show_pr_name != ONLY_BANK)//If preset name display required
             {

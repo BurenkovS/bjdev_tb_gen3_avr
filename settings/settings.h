@@ -271,6 +271,12 @@ typedef struct buttonContext
 
 #define ONBOARD_PEDAL 2
 #define ONBOARD_PEDAL_ALT 3//same physical pedal as ONBOARD_PEDAL
+ 
+typedef enum
+{
+	SELECT_BANK_NO_ACTION = 0,
+	SELECT_BANK_ACTION_SEND_PC 
+} SelectBankAction;
 
 typedef struct
 {
@@ -282,7 +288,7 @@ typedef struct
 	ButtonContext buttonContext[FOOT_BUTTONS_NUM];
 	
 	char BankName[BANK_NAME_NMAX_SIZE];
-	uint8_t selectBankAction;
+	SelectBankAction selectBankAction;
 	uint8_t selectBankActionProgNum;
 } BankSettings;
 
