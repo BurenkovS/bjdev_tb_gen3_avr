@@ -45,6 +45,13 @@ void selectNewPresetCommonPart(uint8_t buttonNum)
 		axefx3QueryStatusDump();
 		runtimeEnvironment.isTimeToShowPresetName_ = 0;//и будем показывать имя банка, пока не придет имя пресета
 	}
+	
+	//if no any processors connected including KPA, show alias name
+	else if(!runtimeEnvironment.isKpaConnected_)
+	{
+		strcpyLimits((const char*)(bank.buttonContext[buttonNum].nameAlias), runtimeEnvironment.vendorPresetName_, BUTTON_NAME_MAX_SIZE);
+		//strcpy(runtimeEnvironment.vendorPresetName_, bank.buttonContext[buttonNum].nameAlias);
+	}
 }
 
 static uint8_t tapMomentaryLock = 0;
