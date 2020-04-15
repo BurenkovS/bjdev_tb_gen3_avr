@@ -79,7 +79,6 @@ void setDefaultBankSettings()
 	bank.selectBankActionProgNum = 0;
 	
 	uint32_t i;
-	char buttonName[16];
 	for (i = 0; i < FOOT_BUTTONS_NUM; ++i)
 	{
 		bank.buttonType[i] = PRESET_CHANGE;//All buttons will preset switchers
@@ -138,9 +137,11 @@ void startupSettingsCheckAndLoad()
 	//Check external EEPROM is present
 	if(eepromPresentStartupCheck())
 	{
-		runtimeEnvironment.totalBanksAvalible_ = (uint8_t)((TOTAL_EEPROM_SIZE_BYTES - sizeof(FirmwareVersionInfoInEeprom) - sizeof(GlobalSettings))/sizeof(BankSettings));
-		if(runtimeEnvironment.totalBanksAvalible_ > 128) 
+		uint32_t banksAvalible = (TOTAL_EEPROM_SIZE_BYTES - sizeof(FirmwareVersionInfoInEeprom) - sizeof(GlobalSettings))/sizeof(BankSettings);
+		if(banksAvalible > 128)
 			runtimeEnvironment.totalBanksAvalible_ = 128;
+		else
+			runtimeEnvironment.totalBanksAvalible_ = (uint8_t)banksAvalible;
 	}
 	else
 	{

@@ -50,7 +50,6 @@ void selectNewPresetCommonPart(uint8_t buttonNum)
 	else if(!runtimeEnvironment.isKpaConnected_)
 	{
 		strcpyLimits((const char*)(bank.buttonContext[buttonNum].nameAlias), runtimeEnvironment.vendorPresetName_, BUTTON_NAME_MAX_SIZE);
-		//strcpy(runtimeEnvironment.vendorPresetName_, bank.buttonContext[buttonNum].nameAlias);
 	}
 }
 
